@@ -12,7 +12,7 @@ qemu-system-x86_64 \
   -machine q35,accel=kvm,mem-merge=off \
   -cpu host,kvm=off,hv_vendor_id=vgaptrocks,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time \
   -smp 10,sockets=1,cores=5,threads=2 \
-  -m 8192 \
+  -m 10240 \
   -vga none \
   -rtc base=localtime \
   -device vfio-pci,host=01:00.0,multifunction=on \
@@ -20,7 +20,6 @@ qemu-system-x86_64 \
   -drive file=/dev/sda,format=raw,if=virtio,cache=none,index=0 \
   -usb -device usb-host,hostbus=1,hostaddr=3 \
   -usb -device usb-host,hostbus=1,hostaddr=4 \
-  -usb -device usb-host,hostbus=1,hostaddr=5 \
   -usb -device usb-host,hostbus=1,hostaddr=6 \
 ;
 

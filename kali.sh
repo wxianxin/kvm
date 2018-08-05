@@ -3,7 +3,7 @@ qemu-system-x86_64 -enable-kvm \
     -smp 8,sockets=1,cores=4,threads=2 \
     -m 8192 \
     -drive file=~/D/vm/kali.qcow2,format=qcow2 \
-    -usb -device usb-host,hostbus=1,hostaddr=10 \
+    -usb -device usb-host,hostbus=1,hostaddr=6 \
     -vga qxl \
 
 ################################################################################

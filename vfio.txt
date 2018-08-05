@@ -1,9 +1,10 @@
-apt-get install qemu-system-x86 qemu-utils
+sudo apt install qemu-kvm
 sudo vim /etc/default/grub
     GRUB_CMDLINE_LINUX_DEFAULT=”quiet intel_iommu=on”
-/etc/default/grub
+sudo update-grub
 
-sh list_iommu_group.sh
+
+bash list_iommu_group.sh
 	IOMMU Group 1 00:01.0 PCI bridge [0604]: Intel Corporation Skylake PCIe Controller (x16) [8086:1901] (rev 07)
 	IOMMU Group 1 01:00.0 VGA compatible controller [0300]: NVIDIA Corporation GP104 [GeForce GTX 1070] [10de:1b81] (rev a1)
 	IOMMU Group 1 01:00.1 Audio device [0403]: NVIDIA Corporation GP104 High Definition Audio Controller [10de:10f0] (rev a1)
