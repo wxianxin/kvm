@@ -1,1 +1,0 @@
-sudo qemu-system-x86_64 -enable-kvm -cpu host -smp cores=2,threads=2,sockets=1 -m 8192 -drive file=/home/coupe/D/Downloads/ubuntu-18.04-desktop-amd64.iso,media=cdrom -usb -device usb-host,hostbus=1,hostaddr=3 -usb -device usb-host,hostbus=1,hostaddr=2

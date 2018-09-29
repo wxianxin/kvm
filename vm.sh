@@ -18,8 +18,8 @@ qemu-system-x86_64 \
   -device vfio-pci,host=01:00.0,multifunction=on \
   -device vfio-pci,host=01:00.1 \
   -drive file=/dev/sda,format=raw,if=virtio,cache=none,index=0 \
+  -usb -device usb-host,hostbus=1,hostaddr=2 \
   -usb -device usb-host,hostbus=1,hostaddr=3 \
-  -usb -device usb-host,hostbus=1,hostaddr=4 \
   -usb -device usb-host,hostbus=1,hostaddr=5 \
 ;
 
