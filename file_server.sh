@@ -7,7 +7,7 @@ qemu-system-x86_64 -enable-kvm \
     -m 8192 \
     -boot c \
     -drive file=~/D/vm/fs.qcow2,format=qcow2,if=virtio,cache=none,index=0 \
-    -usb -device usb-host,hostbus=1,hostaddr=6 \
+    -usb -device usb-host,hostbus=1,hostaddr=5 \
     -vga qxl \
     # -drive file=/dev/sdc2,format=raw,if=virtio,cache=none,index=1 \
     # -device e1000,netdev=net0,mac=ED:BE:DA:EF:F4:9D -netdev tap,id=net0,script=~/kvm/qemu-ifup

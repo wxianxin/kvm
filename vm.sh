@@ -19,11 +19,11 @@ qemu-system-x86_64 \
   -drive file=/dev/sda,format=raw,if=virtio,cache=none,index=0 \
   -usb -device usb-host,hostbus=1,hostaddr=2 \
   -usb -device usb-host,hostbus=1,hostaddr=3 \
-  -usb -device usb-host,hostbus=1,hostaddr=5 \
+  -usb -device usb-host,hostbus=1,hostaddr=4 \
 ;
 
 
-# -drive file=/home/coupe/Win10_1803_English_x64.iso,media=cdrom \
+# -drive file=/home/coupe/Win10_1809_English_x64.iso,media=cdrom \
 # -drive file=/home/coupe/virtio-win-0.1.160.iso,media=cdrom \
 # -net nic,model=virtio \
 

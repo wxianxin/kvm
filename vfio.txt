@@ -1,5 +1,5 @@
 sudo apt install qemu-kvm
-sudo apt isntall ovmf
+sudo apt install ovmf
 
 sudo vim /etc/default/grub
     GRUB_CMDLINE_LINUX_DEFAULT=”quiet intel_iommu=on”
