@@ -7,9 +7,11 @@ sudo update-grub
 
 
 sh list_iommu_group.sh
-	IOMMU Group 1 00:01.0 PCI bridge [0604]: Intel Corporation Skylake PCIe Controller (x16) [8086:1901] (rev 07)
-	IOMMU Group 1 01:00.0 VGA compatible controller [0300]: NVIDIA Corporation GP104 [GeForce GTX 1070] [10de:1b81] (rev a1)
-	IOMMU Group 1 01:00.1 Audio device [0403]: NVIDIA Corporation GP104 High Definition Audio Controller [10de:10f0] (rev a1)
+    IOMMU Group 1 00:01.0 PCI bridge [0604]: Intel Corporation Xeon E3-1200 v5/E3-1500 v5/6th Gen Core Processor PCIe Controller (x16) [8086:1901] (rev 07)
+    IOMMU Group 1 01:00.0 VGA compatible controller [0300]: NVIDIA Corporation TU106M [GeForce RTX 2060 Mobile] [10de:1f11] (rev a1)
+    IOMMU Group 1 01:00.1 Audio device [0403]: NVIDIA Corporation TU106 High Definition Audio Controller [10de:10f9] (rev a1)
+    IOMMU Group 1 01:00.2 USB controller [0c03]: NVIDIA Corporation TU106 USB 3.1 Host Controller [10de:1ada] (rev a1)
+    IOMMU Group 1 01:00.3 Serial bus controller [0c80]: NVIDIA Corporation TU106 USB Type-C Port Policy Controller [10de:1adb] (rev a1)
 
 lspci | grep VGA
 # find hardware to passthrough
@@ -27,6 +29,7 @@ lsusb
 # sudo vim /etc/default/grub
 # Nvidia graphics card for Windows VM:
 # GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on modprobe.blacklist=nouveau"
+# if Nvidia RTX # GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_iommu=on modprobe.blacklist=i2c_nvidia_gpu"
 ######## not working
 sudo vim /etc/modprobe.d/blacklist-nouveau.conf
     blacklist nouveau
