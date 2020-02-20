@@ -20,13 +20,13 @@ qemu-system-x86_64 \
   -m 10240 \
   -vga none \
   -rtc base=localtime \
-  -device vfio-pci,host=01:00.0 \
+  -device vfio-pci,host=01:00.0,multifunction=on,romfile=/home/coupe/D/vm/TU106.rom \
   -device vfio-pci,host=01:00.1 \
   -device vfio-pci,host=01:00.2 \
   -device vfio-pci,host=01:00.3 \
   -drive file=/home/coupe/D/vm/kvm_win10.qcow2,format=qcow2,if=virtio,cache=none,index=0 \
-  -usb -device usb-host,hostbus=1,hostaddr=2 \
-  -usb -device usb-host,hostbus=1,hostaddr=4 \
+  -usb -device usb-host,hostbus=1,hostaddr=5 \
+  -usb -device usb-host,hostbus=1,hostaddr=8 \
 ;
 
 
