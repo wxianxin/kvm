@@ -1,29 +1,23 @@
+########################################################################################
+# Install necessary packages
 sudo apt install qemu-kvm
 sudo apt install ovmf
-
+# Fedora has them installed by default
+########################################################################################
+# Kernel parameter
 sudo vim /etc/default/grub
     GRUB_CMDLINE_LINUX_DEFAULT=”quiet intel_iommu=on”
 sudo update-grub
 
+# Fedora
+sudo grubby --update-kernel=ALL --args="amd_iommu=on"
+sudo vim /etc/default/grub
+    amd_iommu=on iommu=pt rd.driver.pre=vfio-pci
+sudo dracut -f --kver $(uname -r)
 
+# reboot and check
 sh list_iommu_group.sh
-    IOMMU Group 1 00:01.0 PCI bridge [0604]: Intel Corporation Xeon E3-1200 v5/E3-1500 v5/6th Gen Core Processor PCIe Controller (x16) [8086:1901] (rev 07)
-    IOMMU Group 1 01:00.0 VGA compatible controller [0300]: NVIDIA Corporation TU106M [GeForce RTX 2060 Mobile] [10de:1f11] (rev a1)
-    IOMMU Group 1 01:00.1 Audio device [0403]: NVIDIA Corporation TU106 High Definition Audio Controller [10de:10f9] (rev a1)
-    IOMMU Group 1 01:00.2 USB controller [0c03]: NVIDIA Corporation TU106 USB 3.1 Host Controller [10de:1ada] (rev a1)
-    IOMMU Group 1 01:00.3 Serial bus controller [0c80]: NVIDIA Corporation TU106 USB Type-C Port Policy Controller [10de:1adb] (rev a1)
-
-lspci | grep VGA
-# find hardware to passthrough
-list -nn | grep {VGA FOR GUEST}
-	# for vga audio controller
-	# 01:00.0 VGA compatible controller [0300]: NVIDIA Corporation GP104 [GeForce GTX 1070] [10de:1b81] (rev a1)
-	# 01:00.1 Audio device [0403]: NVIDIA Corporation GP104 High Definition Audio Controller [10de:10f0] (rev a1)
-lsusb
-    # for mouse and keyboard
-    # Bus 001 Device 003: ID 0c45:8073 Microdia 
-    # Bus 001 Device 002: ID 046d:c539 Logitech, Inc. 
-
+########################################################################################
 # prevent the default driver to bind to the graphics card.
 ######## not working
 # sudo vim /etc/default/grub
@@ -36,17 +30,26 @@ sudo vim /etc/modprobe.d/blacklist-nouveau.conf
     options nouveau modeset=0
 sudo update-initramfs -u
 
+# Doesn't work, 20200611, Fedora 32, 5.6.16
+sudo grubby --update-kernel=ALL --args="vfio-pci.ids=1002:731f,1002:ab38"
 
 # In order to make the graphics card available to the Windows VM, we will assign a “dummy” driver as a place holder: vfio-pci.
 sudo vim /etc/modprobe.d/vfio.conf
-sudo vim /etc/modules-load.d/vfio.conf
     # VGAPT_VGA_ID='10de:1401'
     # VGAPT_VGA_AUDIO_ID='10de:0fba'
     # VGAPT_VGA_BUS=01:00.0
     # VGAPT_VGA_AUDIO_BUS=01:00.1
     # options vfio-pci ids=10de:1b81,10de:10f0
     echo options vfio-pci ids=$VGAPT_VGA_ID,$VGAPT_VGA_AUDIO_ID > /etc/modprobe.d/vfio.conf
-    printf "vfio\nvfio_pci\n" > /etc/modules-load.d/vfio.conf
 
+echo "vfio" > /etc/modules-load.d/vfio.conf
+echo "vfio-pci" > /etc/modules-load.d/vfio-pci.conf
+# Fedora needs one more:
+echo "vfio_iommu_type1" > /etc/modules-load.d/vfio_iommu_type1.conf
+
+# reboot and check what driver is being used
+lspci -knn
+
+########################################################################################
 # Finally
 bash vm.sh
