@@ -18,16 +18,17 @@ qemu-system-x86_64 \
   -cpu host,kvm=off,hv_vendor_id=vgaptrocks,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time \
   -smp 10,sockets=1,cores=5,threads=2 \
   -m 10240 \
-  -vga none \
   -rtc base=localtime \
   -boot menu=on \
-  -device vfio-pci,host=03:00.0,romfile=/home/coupe/D/vm/navi_10.rom \
-  -device vfio-pci,host=03:00.1 \
-  -drive file=/home/coupe/D/vm/kvm_win10.qcow2,format=qcow2,if=virtio,cache=none,index=0 \
-  -drive file=/dev/nvme0n1p4,format=raw,cache=none,index=2 \
-  -drive file=/home/coupe/D/vm/virtio-win-0.1.171.iso,media=cdrom \
-  -usb -device usb-host,hostbus=1,hostaddr=2 \
+  -acpitable file=/home/coupe/D/vm/SSDT1.dat \
+  -device vfio-pci,host=01:00.0,romfile=/home/coupe/D/vm/TU106.rom \
+  -device vfio-pci,host=01:00.1 \
+  -device vfio-pci,host=01:00.2 \
+  -device vfio-pci,host=01:00.3 \
+  -drive file=/dev/nvme0n1p7,format=raw,if=virtio,cache=none,index=0 \
+  -drive file=/dev/nvme1n1p4,format=raw,if=virtio,cache=none,index=1 \
   -usb -device usb-host,hostbus=3,hostaddr=2 \
+  -usb -device usb-host,hostbus=3,hostaddr=3 \
 ;
 
 
@@ -37,4 +38,5 @@ qemu-system-x86_64 \
 # -drive file=/home/coupe/D/vm/kvm_win10.qcow2,format=qcow2,if=virtio,cache=none,index=0 \
 # -drive file=/home/coupe/D/vm/Win10_2004_English_x64.iso,media=cdrom \
 # -drive file=/home/coupe/D/vm/virtio-win-0.1.171.iso,media=cdrom \
+# -device vfio-pci,host=01:00.0,romfile=/home/coupe/D/vm/navi_10.rom \
 # -net nic,model=virtio \
