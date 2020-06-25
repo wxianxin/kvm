@@ -54,6 +54,21 @@ lspci -knn
 # Finally
 bash vm.sh
 
+
+########################################################################################
+# Performance Tuning
+# Fedora hugepage
+mount -t hugetlbfs hugetlbfs /dev/hugepages
+sysctl vm.nr_hugepages=6144     # for x86-64 architecture, memory page size is 2048kb. 2mb * 6144 = 12GB
+# qemu -m 12288 -mem-prealloc -mem-path /dev/hugepages 
+
+# check CPU topology
+lstopo
+# CPU pinning using taskset
+# 1111111111000000=0xFFC0 (binary is reverse of the sequence of cpu id)
+taskset 0xFFC0 qemu-system-x86_64 \blabla
+
+
 01:00.0 10de:1f15
 01:00.1 10de:10f9
 01:00.2 10de:1ada

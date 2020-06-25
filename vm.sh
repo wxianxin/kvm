@@ -10,18 +10,21 @@ export VGAPT_FIRMWARE_VARS=/usr/share/OVMF/OVMF_VARS.fd
 export VGAPT_FIRMWARE_VARS_TMP=/tmp/OVMF_VARS.fd.tmp
 
 cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
-qemu-system-x86_64 \
+taskset 0xFFF0 qemu-system-x86_64 \
   -drive if=pflash,format=raw,readonly,file=$VGAPT_FIRMWARE_BIN \
   -drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   -enable-kvm \
   -machine q35,accel=kvm,mem-merge=off \
   -cpu host,kvm=off,hv_vendor_id=vgaptrocks,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time \
-  -smp 10,sockets=1,cores=5,threads=2 \
-  -m 10240 \
+  -smp 12,sockets=1,cores=6,threads=2 \
+  -m 16384 \
+  -mem-prealloc \
+  -mem-path /dev/hugepages \
+  -vga none \
   -rtc base=localtime \
   -boot menu=on \
-  -acpitable file=/home/coupe/D/vm/SSDT1.dat \
-  -device vfio-pci,host=01:00.0,romfile=/home/coupe/D/vm/TU106.rom \
+  -acpitable file=/home/coupe/kvm/SSDT1.dat \
+  -device vfio-pci,host=01:00.0,romfile=/home/coupe/kvm/TU106.rom \
   -device vfio-pci,host=01:00.1 \
   -device vfio-pci,host=01:00.2 \
   -device vfio-pci,host=01:00.3 \
@@ -29,9 +32,13 @@ qemu-system-x86_64 \
   -drive file=/dev/nvme1n1p4,format=raw,if=virtio,cache=none,index=1 \
   -usb -device usb-host,hostbus=3,hostaddr=2 \
   -usb -device usb-host,hostbus=3,hostaddr=3 \
+  -usb -device usb-host,hostbus=5,hostaddr=3 \
 ;
 
 
+# taskset 0xFFF0 qemu-system-x86_64 \
+# -m 16384 \
+# -m 16384 -mem-prealloc -mem-path /dev/hugepages \
 # -vga none \
 # -device vfio-pci,host=01:00.0,romfile=/home/coupe/D/vm/TU106.rom \
 # -drive file=/dev/sda,format=raw,if=virtio,cache=none,index=1 \
