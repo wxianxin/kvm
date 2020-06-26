@@ -59,8 +59,8 @@ bash vm.sh
 # Performance Tuning
 # Fedora hugepage
 mount -t hugetlbfs hugetlbfs /dev/hugepages
-sysctl vm.nr_hugepages=6144     # for x86-64 architecture, memory page size is 2048kb. 2mb * 6144 = 12GB
-# qemu -m 12288 -mem-prealloc -mem-path /dev/hugepages 
+sysctl vm.nr_hugepages=8200
+# qemu -m 16384 -mem-prealloc -mem-path /dev/hugepages 
 
 # check CPU topology
 lstopo
