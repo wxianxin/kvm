@@ -10,19 +10,19 @@ bash /home/coupe/kvm/bind_vfio.sh
 bash /home/coupe/kvm/set_cpu_performance.sh
 
 mount -t hugetlbfs hugetlbfs /dev/hugepages
-sysctl vm.nr_hugepages=8200
+sysctl vm.nr_hugepages=8192
 
 export VGAPT_FIRMWARE_BIN=/usr/share/OVMF/OVMF_CODE.fd
 export VGAPT_FIRMWARE_VARS=/usr/share/OVMF/OVMF_VARS.fd
 export VGAPT_FIRMWARE_VARS_TMP=/tmp/OVMF_VARS.fd.tmp
 
 cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
-taskset 0xFFF0 qemu-system-x86_64 \
+qemu-system-x86_64 \
   -drive if=pflash,format=raw,readonly,file=$VGAPT_FIRMWARE_BIN \
   -drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   -enable-kvm \
   -machine q35,accel=kvm,mem-merge=off \
-  -cpu host,kvm=off,topoext=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_vendor_id=1234567890ab,hv_spinlocks=0x1fff \
+  -cpu host,kvm=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_frequencies,hv_vendor_id=1234567890ab,hv_spinlocks=0x1fff \
   -smp 12,sockets=1,cores=6,threads=2 \
   -m 16384 \
   -mem-prealloc \
