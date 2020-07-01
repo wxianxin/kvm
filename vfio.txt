@@ -30,8 +30,11 @@ sudo vim /etc/modprobe.d/blacklist-nouveau.conf
     options nouveau modeset=0
 sudo update-initramfs -u
 
+########################################################################################
+######## not working
 # Doesn't work, 20200611, Fedora 32, 5.6.16
 sudo grubby --update-kernel=ALL --args="vfio-pci.ids=1002:731f,1002:ab38"
+######## not working
 
 # In order to make the graphics card available to the Windows VM, we will assign a “dummy” driver as a place holder: vfio-pci.
 sudo vim /etc/modprobe.d/vfio.conf
@@ -62,12 +65,13 @@ mount -t hugetlbfs hugetlbfs /dev/hugepages
 sysctl vm.nr_hugepages=8200
 # qemu -m 16384 -mem-prealloc -mem-path /dev/hugepages 
 
+# CPU pinning
 # check CPU topology
+lscpu -e
 lstopo
 # CPU pinning using taskset
 # 1111111111000000=0xFFC0 (binary is reverse of the sequence of cpu id)
 taskset 0xFFC0 qemu-system-x86_64 \blabla
-
 
 01:00.0 10de:1f15
 01:00.1 10de:10f9
