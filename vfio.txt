@@ -53,7 +53,8 @@ bash vm.sh
 
 ########################################################################################
 # Performance Tuning
-# Fedora hugepage
+watch -n.5 "cat /proc/cpuinfo | grep \"^[c]pu MHz\""
+# hugepage
 mount -t hugetlbfs hugetlbfs /dev/hugepages
 sysctl vm.nr_hugepages=8200
 # qemu -m 16384 -mem-prealloc -mem-path /dev/hugepages 
