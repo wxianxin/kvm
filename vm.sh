@@ -34,13 +34,14 @@ chrt -r 1 taskset -c 4-15 qemu-system-x86_64 \
   -device vfio-pci,host=01:00.1 \
   -device vfio-pci,host=01:00.2 \
   -device vfio-pci,host=01:00.3 \
-  -drive file=/dev/nvme0n1p7,format=raw,if=virtio,cache=none,index=0 \
+  -drive file=/dev/nvme0n1p3,format=raw,if=virtio,cache=none,index=0 \
   -drive file=/dev/nvme1n1p4,format=raw,if=virtio,cache=none,index=1 \
-  -usb -device usb-host,hostbus=3,hostaddr=2 \
+  -usb -device usb-host,hostbus=3,hostaddr=3 \
   -usb -device usb-host,hostbus=5,hostaddr=3 \
 ;
 
 bash /home/coupe/kvm/set_cpu_ondemand.sh
+bash /home/coupe/kvm/undo_bind_vfio.sh
 
 # taskset 0xFFF0 qemu-system-x86_64 \
 # -cpu host,kvm=off,topoext=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_vendor_id=1234567890ab,hv_spinlocks=0x1fff \
