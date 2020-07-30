@@ -66,6 +66,9 @@ lstopo
 # CPU pinning using taskset
 # 1111111111000000=0xFFC0 (binary is reverse of the sequence of cpu id)
 taskset 0xFFC0 qemu-system-x86_64 \blabla
+# cpu isolation kernel parameters
+sudo vim /etc/default/grub
+    GRUB_CMDLINE_LINUX_DEFAULT="quiet splash amd_iommu=on isolcpus=4-15 nohz_full=4-15 rcu_nocbs=4-15"
 
 01:00.0 10de:1f15
 01:00.1 10de:10f9
