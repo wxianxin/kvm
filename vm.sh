@@ -4,11 +4,11 @@
 # sudo sh -c 'echo "0000:01:00.2" > /sys/bus/pci/devices/0000:01:00.2/driver/unbind'
 # sudo sh -c 'echo "0000:01:00.2" > /sys/bus/pci/drivers/vfio-pci/bind'
 
-#bash /home/coupe/kvm/bind_vfio.sh
+# sudo bash /home/coupe/kvm/bind_vfio.sh
 sudo bash /home/coupe/kvm/set_cpu_performance.sh
 
 sudo mount -t hugetlbfs hugetlbfs /dev/hugepages
-sudo sysctl vm.nr_hugepages=6144
+sudo sysctl vm.nr_hugepages=5120
 
 # Standard locations from the Ubuntu `ovmf` package; last one is arbitrary:
 export VGAPT_FIRMWARE_BIN=/usr/share/OVMF/OVMF_CODE.fd
@@ -21,14 +21,14 @@ sudo chrt -r 1 taskset -c 4-15 qemu-system-x86_64 \
   -drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   -enable-kvm \
   -machine q35,accel=kvm,mem-merge=off \
-  -cpu host,kvm=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_frequencies,hv_vendor_id=1234567890ab,hv_spinlocks=0x1fff \
+  -cpu host,kvm=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_vendor_id=1234567890ab,hv_spinlocks=0x1fff \
   -smp 12,sockets=1,cores=6,threads=2 \
-  -m 12288 \
+  -m 10240 \
   -mem-prealloc \
   -mem-path /dev/hugepages \
   -vga none \
   -rtc base=localtime \
-  -boot menu=on \
+  -boot menu=off \
   -acpitable file=/home/coupe/kvm/SSDT1.dat \
   -device vfio-pci,host=01:00.0 \
   -device vfio-pci,host=01:00.1 \
@@ -45,10 +45,7 @@ sudo bash /home/coupe/kvm/set_cpu_ondemand.sh
 sudo bash /home/coupe/kvm/undo_bind_vfio.sh
 
 # taskset 0xFFF0 qemu-system-x86_64 \
-# -cpu host,kvm=off,topoext=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_vendor_id=1234567890ab,hv_spinlocks=0x1fff \
-# -m 16384 \
 # -m 16384 -mem-prealloc -mem-path /dev/hugepages \
-# -vga none \
 # -device vfio-pci,host=01:00.0,romfile=/home/coupe/D/vm/TU106.rom \
 # -drive file=/dev/sda,format=raw,if=virtio,cache=none,index=1 \
 # -drive file=/home/coupe/D/vm/kvm_win10.qcow2,format=qcow2,if=virtio,cache=none,index=0 \

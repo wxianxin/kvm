@@ -3,7 +3,6 @@
 
 # Kill wayland display manager
 sudo systemctl stop display-manager.service
-sleep 2
 
 for device in $(lspci | grep NVIDIA | awk '{print "0000:"$1}')
 do
@@ -20,7 +19,6 @@ sudo bash -c "echo 10de 1adb > /sys/bus/pci/drivers/vfio-pci/new_id"
 
 # start wayland display manager
 sudo systemctl start display-manager.service
-sleep 2
 
 # sudo bash -c "echo -n 0000:01:00.0 > /sys/bus/pci/devices/0000:01:00.0/driver/unbind"
 # sudo bash -c "echo vfio-pci > /sys/bus/pci/devices/0000:01:00.0/driver_override"
