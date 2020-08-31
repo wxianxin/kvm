@@ -21,7 +21,7 @@ sudo chrt -r 1 taskset -c 4-15 qemu-system-x86_64 \
   -drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   -enable-kvm \
   -machine q35,accel=kvm,mem-merge=off \
-  -cpu host,kvm=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_vendor_id=1234567890ab,hv_spinlocks=0x1fff \
+  -cpu host,kvm=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_reset,hv_vendor_id=stevenwang,hv_spinlocks=0x1fff \
   -smp 12,sockets=1,cores=6,threads=2 \
   -m 10240 \
   -mem-prealloc \
