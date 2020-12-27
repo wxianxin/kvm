@@ -1,4 +1,4 @@
-# qemu-img create -f qcow2 ~/D/vm/kvm_win10.qcow2 40G
+# qemu-img create -f qcow2 ~/D/vm/kvm_win10.qcow2 48G
 
 # unbind driver after boot process
 # sudo sh -c 'echo "0000:01:00.2" > /sys/bus/pci/devices/0000:01:00.2/driver/unbind'
@@ -46,6 +46,7 @@ sudo bash /home/coupe/kvm/undo_bind_vfio.sh
 
 # taskset 0xFFF0 qemu-system-x86_64 \
 # -m 16384 -mem-prealloc -mem-path /dev/hugepages \
+# -vga std \
 # -device vfio-pci,host=01:00.0,romfile=/home/coupe/D/vm/TU106.rom \
 # -drive file=/dev/sda,format=raw,if=virtio,cache=none,index=1 \
 # -drive file=/home/coupe/D/vm/kvm_win10.qcow2,format=qcow2,if=virtio,cache=none,index=0 \
@@ -54,4 +55,6 @@ sudo bash /home/coupe/kvm/undo_bind_vfio.sh
 # -device vfio-pci,host=01:00.0,romfile=/home/coupe/D/vm/navi_10.rom \
 # -net nic,model=virtio \
 
+########################################################################################
 # hv_vendor_id is used for Nvidia Error 43 prevention
+# !!! If created vm is using virtio, DO NOT qemu-system-x86_64 start without drive option "if=virtio", you will get BSOD

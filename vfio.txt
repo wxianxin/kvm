@@ -9,7 +9,7 @@ sudo vim /etc/default/grub
     GRUB_CMDLINE_LINUX_DEFAULT=”quiet intel_iommu=on”
 sudo update-grub
 
-# Fedora
+# Fedora & AMD
 sudo grubby --update-kernel=ALL --args="amd_iommu=on"
 sudo vim /etc/default/grub
     amd_iommu=on iommu=pt rd.driver.pre=vfio-pci
@@ -18,7 +18,7 @@ sudo dracut -f --kver $(uname -r)
 # reboot and check
 sh list_iommu_group.sh
 ########################################################################################
-# prevent the default driver to bind to the graphics card.
+# prevent the default driver to bind to the graphics card. # OR unbind driver before passthrough
 sudo vim /etc/default/grub
 	GRUB_CMDLINE_LINUX_DEFAULT="quiet splash amd_iommu=on vfio-pci.ids=10de:1f15,10de:10f9,10de:1ada,10de:1adb"
 sudo update-grub
@@ -70,7 +70,5 @@ taskset 0xFFC0 qemu-system-x86_64 \blabla
 sudo vim /etc/default/grub
     GRUB_CMDLINE_LINUX_DEFAULT="quiet splash amd_iommu=on isolcpus=4-15 nohz_full=4-15 rcu_nocbs=4-15"
 
-01:00.0 10de:1f15
-01:00.1 10de:10f9
-01:00.2 10de:1ada
-01:00.3 10de:1adb
+# OVMF screen resolution
+# Need to `ESC` during `Tianocore` UEFI screen, set resolution, then `reset`
