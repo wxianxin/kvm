@@ -6,18 +6,19 @@ export VGAPT_FIRMWARE_VARS=/usr/share/OVMF/OVMF_VARS.fd
 export VGAPT_FIRMWARE_VARS_TMP=/tmp/OVMF_VARS.fd.tmp
 
 sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
-sudo chrt -r 1 taskset -c 4-7 qemu-system-x86_64 \
+sudo chrt -r 1 taskset -c 2-3 qemu-system-x86_64 \
   -drive if=pflash,format=raw,readonly,file=$VGAPT_FIRMWARE_BIN \
   -drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   -enable-kvm \
   -machine q35,accel=kvm,mem-merge=off \
   -cpu host,kvm=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_reset,hv_vendor_id=stevenwang,hv_spinlocks=0x1fff \
-  -smp 4,sockets=1,cores=2,threads=2 \
+  -smp 2,sockets=1,cores=2,threads=1 \
   -m 8192 \
   -vga std \
   -boot menu=on \
   -rtc base=localtime \
-  -drive file=/home/coupe/kvm_win10.qcow2,format=qcow2,if=virtio,cache=none,index=0 \
+  -drive file=/home/coupe/D/vm/kvm_win10.qcow2,format=qcow2,if=virtio,cache=none,index=0 \
+  -drive file=/dev/nvme0n1p7,format=raw,if=virtio,cache=none,index=1 \
 ;
 
 
