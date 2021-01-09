@@ -1,4 +1,5 @@
-# qemu-img create -f qcow2 ~/D/vm/kvm_win10.qcow2 48G
+# qemu-img create -f qcow2 ~/D/vm/win10.qcow2 48G
+# qemu-img create -f qcow2 -b ~/D/vm/win10.qcow2 win10_snapshot.img
 
 # unbind driver after boot process
 # sudo sh -c 'echo "0000:01:00.2" > /sys/bus/pci/devices/0000:01:00.2/driver/unbind'
@@ -34,7 +35,6 @@ sudo chrt -r 1 taskset -c 2-3 qemu-system-x86_64 \
   -drive file=/home/coupe/D/vm/kvm_win10.qcow2,format=qcow2,if=virtio,cache=none,index=0 \
   -drive file=/dev/nvme0n1p7,format=raw,if=virtio,cache=none,index=1 \
   -usb -device usb-host,hostbus=1,hostaddr=6 \
-  -usb -device usb-host,hostbus=1,hostaddr=10 \
 ;
 
 # sudo bash /home/coupe/kvm/set_cpu_ondemand.sh
