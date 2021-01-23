@@ -36,6 +36,7 @@ sudo vim /etc/modprobe.d/vfio.conf
     # VGAPT_VGA_AUDIO_BUS=01:00.1
     # options vfio-pci ids=10de:1b81,10de:10f0
     echo options vfio-pci ids=$VGAPT_VGA_ID,$VGAPT_VGA_AUDIO_ID > /etc/modprobe.d/vfio.conf
+    sudo bash -c "echo options vfio-pci ids=10de:2484,10de:228b > /etc/modprobe.d/vfio.conf"
 
 sudo bash -c "echo vfio > /etc/modules-load.d/vfio.conf"
 sudo bash -c "echo vfio-pci > /etc/modules-load.d/vfio-pci.conf"
@@ -55,6 +56,7 @@ bash vm.sh
 # Performance Tuning
 watch -n.5 "cat /proc/cpuinfo | grep \"^[c]pu MHz\""
 # hugepage
+# vm.nr_hugepages should be a bit larger than necessary e.g. 8200*2 > 16384
 mount -t hugetlbfs hugetlbfs /dev/hugepages
 sysctl vm.nr_hugepages=8200
 # qemu -m 16384 -mem-prealloc -mem-path /dev/hugepages 
