@@ -17,33 +17,34 @@ export VGAPT_FIRMWARE_VARS=/usr/share/OVMF/OVMF_VARS.fd
 export VGAPT_FIRMWARE_VARS_TMP=/tmp/OVMF_VARS.fd.tmp
 
 sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
-sudo chrt -r 1 taskset -c 2-3 qemu-system-x86_64 \
+sudo chrt -r 1 taskset -c 2-7 qemu-system-x86_64 \
   -drive if=pflash,format=raw,readonly,file=$VGAPT_FIRMWARE_BIN \
   -drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   -enable-kvm \
   -machine q35,accel=kvm,mem-merge=off \
   -cpu host,kvm=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_reset,hv_vendor_id=stevenwang,hv_spinlocks=0x1fff \
-  -smp 2,sockets=1,cores=2,threads=1 \
+  -smp 6,sockets=1,cores=3,threads=2 \
   -m 10240 \
   -mem-prealloc \
   -mem-path /dev/hugepages \
-  -vga std \
+  -vga none \
   -rtc base=localtime \
   -boot menu=on \
   -drive file=/home/coupe/D/vm/kvm_win10.qcow2,format=qcow2,if=virtio,cache=none,index=0 \
   -drive file=/dev/nvme0n1p7,format=raw,if=virtio,cache=none,index=1 \
+  -device vfio-pci,host=02:00.0 \
+  -device vfio-pci,host=02:00.1 \
   -usb -device usb-host,hostbus=1,hostaddr=6 \
   -usb -device usb-host,hostbus=1,hostaddr=7 \
-  -usb -device usb-host,hostbus=1,hostaddr=8 \
+  -usb -device usb-host,hostbus=1,hostaddr=10 \
 ;
 
-# -device vfio-pci,host=01:00.0 \
-# -device vfio-pci,host=01:00.1 \
 # sudo bash /home/coupe/kvm/set_cpu_ondemand.sh
 # sudo bash /home/coupe/kvm/undo_bind_vfio.sh
 
 # taskset 0xFFF0 qemu-system-x86_64 \
 # -m 16384 -mem-prealloc -mem-path /dev/hugepages \
+# -vga none \
 # -vga std \
 # -soundhw hda
 # -device vfio-pci,host=01:00.0,romfile=/home/coupe/D/vm/TU106.rom \
