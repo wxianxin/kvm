@@ -5,6 +5,15 @@
 # sudo sh -c 'echo "0000:01:00.2" > /sys/bus/pci/devices/0000:01:00.2/driver/unbind'
 # sudo sh -c 'echo "0000:01:00.2" > /sys/bus/pci/drivers/vfio-pci/bind'
 
+########################################################################################
+# network bridge
+sudo ip link add br0 type bridge
+sudo ip link set br0 up
+sudo ip link set dev enp4s0 master br0
+sudo ip link set enp4s0 up
+########################################################################################
+
+
 sudo bash /home/coupe/kvm/bind_vfio.sh
 # sudo bash /home/coupe/kvm/set_cpu_performance.sh
 
@@ -34,10 +43,12 @@ sudo chrt -r 1 taskset -c 2-7 qemu-system-x86_64 \
   -drive file=/dev/nvme0n1p7,format=raw,if=virtio,cache=none,index=1 \
   -device vfio-pci,host=02:00.0 \
   -device vfio-pci,host=02:00.1 \
+  -net nic -net bridge,br=br0 \
   -usb -device usb-host,hostbus=1,hostaddr=6 \
   -usb -device usb-host,hostbus=1,hostaddr=7 \
   -usb -device usb-host,hostbus=1,hostaddr=10 \
 ;
+
 
 # sudo bash /home/coupe/kvm/set_cpu_ondemand.sh
 # sudo bash /home/coupe/kvm/undo_bind_vfio.sh
