@@ -34,7 +34,6 @@ export VGAPT_FIRMWARE_VARS_TMP=/tmp/OVMF_VARS.fd.tmp
 
 sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
 sudo chrt -r 1 taskset -c 2-7 qemu-system-x86_64 \
-  -D ./qemu.log \
   -drive if=pflash,format=raw,readonly,file=$VGAPT_FIRMWARE_BIN \
   -drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   -enable-kvm \
@@ -47,15 +46,16 @@ sudo chrt -r 1 taskset -c 2-7 qemu-system-x86_64 \
   -vga none \
   -rtc base=localtime \
   -boot menu=on \
-  -drive file=/home/coupe/D/vm/kvm_win10.qcow2,format=qcow2,if=virtio,cache=none,index=0 \
-  -drive file=/dev/nvme0n1p6,format=raw,if=virtio,cache=none,index=2 \
+  -drive file=/home/coupe/win10.qcow2,format=qcow2,if=virtio,cache=none,index=0 \
   -drive file=/dev/nvme0n1p7,format=raw,if=virtio,cache=none,index=1 \
+  -drive file=/dev/nvme0n1p6,format=raw,if=virtio,cache=none,index=2 \
   -device vfio-pci,host=02:00.0 \
   -device vfio-pci,host=02:00.1 \
   -device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no \
-  -usb -device usb-host,hostbus=1,hostaddr=6 \
-  -usb -device usb-host,hostbus=1,hostaddr=7 \
-  -usb -device usb-host,hostbus=1,hostaddr=10 \
+  -device qemu-xhci,id=xhci \
+  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=4,port=1 \
+  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=5,port=2 \
+  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=7,port=3 \
 ;
 
 
@@ -75,7 +75,13 @@ sudo chrt -r 1 taskset -c 2-7 qemu-system-x86_64 \
 # -device vfio-pci,host=01:00.0,romfile=/home/coupe/D/vm/navi_10.rom \
 # -acpitable file=/home/coupe/kvm/SSDT1.dat \
 # -net nic -net bridge,br=br0 \
+# -audiodev pa,id=snd0 \
+# -device usb-audio,audiodev=snd0 \
+# -usb -device usb-host,hostbus=1,hostaddr=7 \ # legacy USB passthrough(usb1.1/2.0)
+
 
 ########################################################################################
 # hv_vendor_id is used for Nvidia Error 43 prevention
-# !!! If vm created using virtio, DO NOT qemu-system-x86_64 start without drive option "if=virtio", otherwise BSOD
+# If vm created using virtio, DO NOT qemu-system-x86_64 start without drive option "if=virtio", otherwise BSOD
+# chrt: -r robin round scheduler
+# USB: ehci(usb1.0/2.0) xchi(usb3.0) controller
