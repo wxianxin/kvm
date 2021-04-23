@@ -1,3 +1,6 @@
+#!/bin/bash 
+
+########################################################################################
 # qemu-img create -f qcow2 ~/D/vm/win10.qcow2 48G
 # qemu-img create -f qcow2 -b ~/D/vm/win10.qcow2 win10_snapshot.img
 
@@ -6,23 +9,43 @@
 # sudo sh -c 'echo "0000:01:00.2" > /sys/bus/pci/drivers/vfio-pci/bind'
 
 ########################################################################################
+# toggles
+network_bridge="no"
+rebind_GPU="no"
+amd_cpu_performance="no"
+
+########################################################################################
 # network bridge
 # a bridge is like a virtual switch
 # a tap device is like a virtual nic
 # virtio driver can leverage tap as nic for guest
-sudo ip link add br0 type bridge
-sudo ip link set dev br0 up
-sudo ip link set dev enp4s0 master br0
-sudo ip link set enp4s0 up
-sudo ip tuntap add mode tap tap0
-sudo ip link set tap0 master br0
-sudo ip link set tap0 up
-sudo dhclient br0
+if [ "$network_bridge" == "yes" ]; then
+    echo "network_bridge: $network_bridge"
+    sudo ip link add br0 type bridge
+    sudo ip link set dev br0 up
+    sudo ip link set dev enp4s0 master br0
+    sudo ip link set enp4s0 up
+    sudo ip tuntap add mode tap tap0
+    sudo ip link set tap0 master br0
+    sudo ip link set tap0 up
+    sudo dhclient br0
+fi
+
 ########################################################################################
+# rebind GPU
+if [ "$rebind_GPU" == "yes" ]; then
+    echo "rebind_GPU: $rebind_GPU"
+    sudo bash /home/coupe/kvm/bind_vfio.sh
+fi
 
+########################################################################################
+# set AMD CPU to performance mode
+if [ "$amd_cpu_performance" == "yes" ]; then
+    echo "amd_cpu_performance: $amd_cpu_performance"
+    sudo bash /home/coupe/kvm/set_cpu_performance.sh
+fi
 
-sudo bash /home/coupe/kvm/bind_vfio.sh
-# sudo bash /home/coupe/kvm/set_cpu_performance.sh
+########################################################################################
 
 sudo mount -t hugetlbfs hugetlbfs /dev/hugepages
 sudo sysctl vm.nr_hugepages=5200
@@ -33,7 +56,7 @@ export VGAPT_FIRMWARE_VARS=/usr/share/OVMF/OVMF_VARS.fd
 export VGAPT_FIRMWARE_VARS_TMP=/tmp/OVMF_VARS.fd.tmp
 
 sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
-sudo chrt -r 1 taskset -c 2-7 qemu-system-x86_64 \
+sudo chrt -r 1 taskset -c 6-11 qemu-system-x86_64 \
   -drive if=pflash,format=raw,readonly,file=$VGAPT_FIRMWARE_BIN \
   -drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   -enable-kvm \
@@ -43,24 +66,37 @@ sudo chrt -r 1 taskset -c 2-7 qemu-system-x86_64 \
   -m 10240 \
   -mem-prealloc \
   -mem-path /dev/hugepages \
-  -vga none \
+  -vga std \
   -rtc base=localtime \
   -boot menu=on \
   -drive file=/home/coupe/win10.qcow2,format=qcow2,if=virtio,cache=none \
-  -drive file=/dev/nvme0n1p7,format=raw,if=virtio,cache=none \
-  -drive file=/dev/nvme0n1p6,format=raw,if=virtio,cache=none \
-  -device vfio-pci,host=02:00.0 \
-  -device vfio-pci,host=02:00.1 \
-  -device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no \
+  -drive file=/dev/sda6,format=raw,if=virtio,cache=none \
+  -drive file=/dev/sda7,format=raw,if=virtio,cache=none \
+  # -device vfio-pci,host=02:00.0 \
+  # -device vfio-pci,host=02:00.1 \
+  # -device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no \
   -device qemu-xhci,id=xhci \
-  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=4,port=1 \
+  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=1,port=3 \
+  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=1,port=4 \
   -device usb-host,bus=xhci.0,hostbus=1,hostaddr=5,port=2 \
-  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=7,port=3 \
 ;
 
 
-# sudo bash /home/coupe/kvm/set_cpu_ondemand.sh
-# sudo bash /home/coupe/kvm/undo_bind_vfio.sh
+########################################################################################
+# undo rebind GPU
+if [ "$rebind_GPU" == "yes" ]; then
+    echo "rebind_GPU: $rebind_GPU"
+    sudo bash /home/coupe/kvm/undo_bind_vfio.sh
+fi
+
+########################################################################################
+# set AMD CPU back to ondemand mode
+if [ "$amd_cpu_performance" == "yes" ]; then
+    echo "amd_cpu_performance: $amd_cpu_performance"
+    sudo bash /home/coupe/kvm/set_cpu_ondemand.sh
+fi
+########################################################################################
+
 
 # taskset 0xFFF0 qemu-system-x86_64 \
 # -m 16384 -mem-prealloc -mem-path /dev/hugepages \
