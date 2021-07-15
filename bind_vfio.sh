@@ -18,8 +18,8 @@ sudo bash -c "echo efi-framebuffer.0 > /sys/bus/platform/drivers/efi-framebuffer
 
 sudo modprobe vfio-pci disable_vga=1
 
-sudo bash -c "echo 10de 2484 > /sys/bus/pci/drivers/vfio-pci/new_id"
-sudo bash -c "echo 10de 228b > /sys/bus/pci/drivers/vfio-pci/new_id"
+sudo bash -c "echo 10de 2560 > /sys/bus/pci/drivers/vfio-pci/new_id"
+sudo bash -c "echo 10de 228e > /sys/bus/pci/drivers/vfio-pci/new_id"
 
 # # start wayland display manager
 # sudo systemctl start display-manager.service

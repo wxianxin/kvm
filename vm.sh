@@ -10,9 +10,9 @@
 
 ########################################################################################
 # toggles
-network_bridge="no"
+network_bridge="yes"
 rebind_GPU="no"
-amd_cpu_performance="no"
+amd_cpu_performance="yes"
 
 ########################################################################################
 # network bridge
@@ -23,8 +23,8 @@ if [ "$network_bridge" == "yes" ]; then
     echo "network_bridge: $network_bridge"
     sudo ip link add br0 type bridge
     sudo ip link set dev br0 up
-    sudo ip link set dev enp4s0 master br0
-    sudo ip link set enp4s0 up
+    sudo ip link set dev enp3s0 master br0
+    sudo ip link set enp3s0 up
     sudo ip tuntap add mode tap tap0
     sudo ip link set tap0 master br0
     sudo ip link set tap0 up
@@ -56,29 +56,31 @@ export VGAPT_FIRMWARE_VARS=/usr/share/OVMF/OVMF_VARS.fd
 export VGAPT_FIRMWARE_VARS_TMP=/tmp/OVMF_VARS.fd.tmp
 
 sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
-sudo chrt -r 1 taskset -c 6-11 qemu-system-x86_64 \
+sudo chrt -r 1 taskset -c 4-15 qemu-system-x86_64 \
   -drive if=pflash,format=raw,readonly,file=$VGAPT_FIRMWARE_BIN \
   -drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   -enable-kvm \
   -machine q35,accel=kvm,mem-merge=off \
   -cpu host,kvm=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_reset,hv_vendor_id=stevenwang,hv_spinlocks=0x1fff \
-  -smp 6,sockets=1,cores=3,threads=2 \
+  -smp 12,sockets=1,cores=6,threads=2 \
   -m 10240 \
   -mem-prealloc \
   -mem-path /dev/hugepages \
   -vga std \
   -rtc base=localtime \
   -boot menu=on \
+  -acpitable file=/home/coupe/kvm/SSDT1.dat \
   -drive file=/home/coupe/win10.qcow2,format=qcow2,if=virtio,cache=none \
-  -drive file=/dev/sda6,format=raw,if=virtio,cache=none \
-  -drive file=/dev/sda7,format=raw,if=virtio,cache=none \
-  # -device vfio-pci,host=02:00.0 \
-  # -device vfio-pci,host=02:00.1 \
-  # -device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no \
+  -drive file=/dev/nvme0n1p4,format=raw,if=virtio,cache=none \
+  -drive file=/dev/nvme1n1p3,format=raw,if=virtio,cache=none \
+  -device vfio-pci,host=01:00.0 \
+  -device vfio-pci,host=01:00.1 \
+  -device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no \
   -device qemu-xhci,id=xhci \
-  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=1,port=3 \
-  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=1,port=4 \
-  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=5,port=2 \
+  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=4,port=1 \
+  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=6,port=2 \
+  -device usb-host,bus=xhci.0,hostbus=3,hostaddr=2,port=3 \
+  -device usb-host,bus=xhci.0,hostbus=3,hostaddr=3,port=4 \
 ;
 
 
@@ -86,7 +88,7 @@ sudo chrt -r 1 taskset -c 6-11 qemu-system-x86_64 \
 # undo rebind GPU
 if [ "$rebind_GPU" == "yes" ]; then
     echo "rebind_GPU: $rebind_GPU"
-    sudo bash /home/coupe/kvm/undo_bind_vfio.sh
+    sudo bash /home/coupe/kvm/bind_vfio_undo.sh
 fi
 
 ########################################################################################
