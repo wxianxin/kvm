@@ -1,4 +1,7 @@
 ########################################################################################
+# compile QEMU
+./configure --target-list=x86_64-softmmu --enable-libusb
+########################################################################################
 # Install necessary packages
 sudo apt install qemu-kvm
 sudo apt install ovmf
