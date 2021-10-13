@@ -79,6 +79,7 @@ sudo chrt -r 1 taskset -c 4-15 /home/coupe/qemu-6.1.0/build/qemu-system-x86_64 \
   -device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no \
   -device qemu-xhci,id=xhci \
   -device usb-host,bus=xhci.0,hostbus=1,hostaddr=3,port=1 \
+  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=4,port=4 \
   -device usb-host,bus=xhci.0,hostbus=3,hostaddr=2,port=2 \
   -device usb-host,bus=xhci.0,hostbus=3,hostaddr=3,port=3 \
 ;
