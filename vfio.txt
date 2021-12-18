@@ -23,23 +23,21 @@ sh list_iommu_group.sh
 ########################################################################################
 # prevent the default driver to bind to the graphics card. # OR unbind driver before passthrough
 sudo vim /etc/default/grub
-    GRUB_CMDLINE_LINUX_DEFAULT="quiet splash amd_iommu=on isolcpus=4-15 nohz_full=4-15 rcu_nocbs=4-15  vfio-pci.ids=10de:2560,10de:228e"
-sudo update-grub
-################################################################
-sudo bash -c "echo blacklist nouveau > /etc/modprobe.d/blacklist-nouveau.conf"
-sudo bash -c "echo options nouveau modeset=0 >> /etc/modprobe.d/blacklist-nouveau.conf"
-sudo update-initramfs -u
+    GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_iommu=on isolcpus=4-15 nohz_full=4-15 rcu_nocbs=4-15 module_blacklist=nouveau nouveau.modeset=0 vfio-pci.ids=10de:249d,10de:228b"
+
+sudo update-grub (or sudo update-initramfs -u)
 
 ################################
+# alternatively for blacklisting nouveau (not using kernel parameter)
+sudo bash -c "echo blacklist nouveau > /etc/modprobe.d/blacklist-nouveau.conf"
+sudo bash -c "echo options nouveau modeset=0 >> /etc/modprobe.d/blacklist-nouveau.conf"
+
+################################
+# alternatively for assigning GPU to VFIO (not using kernel parameter)
 # In order to make the graphics card available to the Windows VM, we will assign a “dummy” driver as a place holder: vfio-pci.
 sudo vim /etc/modprobe.d/vfio.conf
-    # VGAPT_VGA_ID='10de:1401'
-    # VGAPT_VGA_AUDIO_ID='10de:0fba'
-    # VGAPT_VGA_BUS=01:00.0
-    # VGAPT_VGA_AUDIO_BUS=01:00.1
-    # options vfio-pci ids=10de:1b81,10de:10f0
-    echo options vfio-pci ids=$VGAPT_VGA_ID,$VGAPT_VGA_AUDIO_ID > /etc/modprobe.d/vfio.conf
-    sudo bash -c "echo options vfio-pci ids=10de:2484,10de:228b > /etc/modprobe.d/vfio.conf"
+echo options vfio-pci ids=$VGAPT_VGA_ID,$VGAPT_VGA_AUDIO_ID > /etc/modprobe.d/vfio.conf
+sudo bash -c "echo options vfio-pci ids=10de:2484,10de:228b > /etc/modprobe.d/vfio.conf"
 
 sudo bash -c "echo vfio > /etc/modules-load.d/vfio.conf"
 sudo bash -c "echo vfio-pci > /etc/modules-load.d/vfio-pci.conf"

@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 ########################################################################################
-# qemu-img create -f qcow2 ~/D/vm/win10.qcow2 48G
+# qemu-img create -f qcow2 ~/D/vm/win11.qcow2 48G
 # qemu-img create -f qcow2 -b ~/D/vm/win10.qcow2 win10_snapshot.img
 
 # unbind driver after boot process
@@ -10,7 +10,7 @@
 
 ########################################################################################
 # toggles
-network_bridge="yes"
+network_bridge="no"
 rebind_GPU="no"
 amd_cpu_performance="no"
 
@@ -48,7 +48,7 @@ fi
 ########################################################################################
 
 sudo mount -t hugetlbfs hugetlbfs /dev/hugepages
-sudo sysctl vm.nr_hugepages=5200
+sudo sysctl vm.nr_hugepages=5128
 
 # Standard locations from the Ubuntu `ovmf` package; last one is arbitrary:
 export VGAPT_FIRMWARE_BIN=/usr/share/OVMF/OVMF_CODE.fd
@@ -56,8 +56,8 @@ export VGAPT_FIRMWARE_VARS=/usr/share/OVMF/OVMF_VARS.fd
 export VGAPT_FIRMWARE_VARS_TMP=/tmp/OVMF_VARS.fd.tmp
 
 sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
-# sudo chrt -r 1 taskset -c 4-15 qemu-system-x86_64 \
-sudo chrt -r 1 taskset -c 4-15 /home/coupe/qemu-6.1.0/build/qemu-system-x86_64 \
+# sudo chrt -r 1 taskset -c 4-15 /home/coupe/qemu-6.1.0/build/qemu-system-x86_64 \
+sudo chrt -r 1 taskset -c 4-15 qemu-system-x86_64 \
   -drive if=pflash,format=raw,readonly=on,file=$VGAPT_FIRMWARE_BIN \
   -drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   -enable-kvm \
@@ -67,21 +67,19 @@ sudo chrt -r 1 taskset -c 4-15 /home/coupe/qemu-6.1.0/build/qemu-system-x86_64 \
   -m 10240 \
   -mem-prealloc \
   -mem-path /dev/hugepages \
-  -vga std \
+  -vga none \
   -rtc base=localtime \
   -boot menu=on \
   -acpitable file=/home/coupe/kvm/SSDT1.dat \
-  -drive file=/home/coupe/win11.qcow2,format=qcow2,if=virtio,cache=none \
+  -drive file=/home/coupe/D/vm/win11.qcow2,format=qcow2,if=virtio,cache=none \
   -drive file=/dev/nvme0n1p4,format=raw,if=virtio,cache=none \
   -drive file=/dev/nvme1n1p3,format=raw,if=virtio,cache=none \
-  -device vfio-pci,host=01:00.0 \
+  -device vfio-pci,host=01:00.0,romfile=/home/coupe/kvm/GA104.rom \
   -device vfio-pci,host=01:00.1 \
-  -device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no \
   -device qemu-xhci,id=xhci \
-  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=3,port=1 \
-  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=4,port=4 \
-  -device usb-host,bus=xhci.0,hostbus=3,hostaddr=2,port=2 \
-  -device usb-host,bus=xhci.0,hostbus=3,hostaddr=3,port=3 \
+  -device usb-host,bus=xhci.0,hostbus=3,hostaddr=3,port=1 \
+  -device usb-host,bus=xhci.0,hostbus=3,hostaddr=4,port=2 \
+  -device usb-host,bus=xhci.0,hostbus=3,hostaddr=6,port=3 \
 ;
 
 
@@ -117,6 +115,7 @@ fi
 # -audiodev pa,id=snd0 \
 # -device usb-audio,audiodev=snd0 \
 # -usb -device usb-host,hostbus=1,hostaddr=7 \ # legacy USB passthrough(usb1.1/2.0)
+# -device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no \
 
 
 ########################################################################################
