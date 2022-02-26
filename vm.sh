@@ -57,7 +57,7 @@ export VGAPT_FIRMWARE_VARS_TMP=/tmp/OVMF_VARS.fd.tmp
 
 sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
 # sudo chrt -r 1 taskset -c 4-15 /home/coupe/qemu-6.1.0/build/qemu-system-x86_64 \
-sudo chrt -r 1 taskset -c 4-15 qemu-system-x86_64 \
+sudo chrt -r 1 taskset -c 2-7,10-15 qemu-system-x86_64 \
   -drive if=pflash,format=raw,readonly=on,file=$VGAPT_FIRMWARE_BIN \
   -drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   -enable-kvm \

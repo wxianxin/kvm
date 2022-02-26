@@ -1,13 +1,16 @@
 ########################################################################################
 # compile QEMU
 ./configure --target-list=x86_64-softmmu --enable-libusb
+
 ########################################################################################
 # Install necessary packages
 sudo apt install qemu-kvm
 sudo apt install ovmf
 # Fedora has them installed by default
+
 ########################################################################################
 # Kernel parameter
+
 sudo vim /etc/default/grub
     GRUB_CMDLINE_LINUX_DEFAULT=”quiet intel_iommu=on”
 sudo update-grub
@@ -24,15 +27,16 @@ sh list_iommu_group.sh
 # prevent the default driver to bind to the graphics card. # OR unbind driver before passthrough
 sudo vim /etc/default/grub
     GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_iommu=on isolcpus=4-15 nohz_full=4-15 rcu_nocbs=4-15 module_blacklist=nouveau nouveau.modeset=0 vfio-pci.ids=10de:249d,10de:228b"
+    GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_iommu=on isolcpus=2-7,10-15 nohz_full=2-7,10-15 rcu_nocbs=2-7,10-15 module_blacklist=nouveau nouveau.modeset=0 vfio-pci.ids=10de:249d,10de:228b"
 
 sudo update-grub (or sudo update-initramfs -u)
 
-################################
+################################################
 # alternatively for blacklisting nouveau (not using kernel parameter)
 sudo bash -c "echo blacklist nouveau > /etc/modprobe.d/blacklist-nouveau.conf"
 sudo bash -c "echo options nouveau modeset=0 >> /etc/modprobe.d/blacklist-nouveau.conf"
 
-################################
+################################################
 # alternatively for assigning GPU to VFIO (not using kernel parameter)
 # In order to make the graphics card available to the Windows VM, we will assign a “dummy” driver as a place holder: vfio-pci.
 sudo vim /etc/modprobe.d/vfio.conf
@@ -55,6 +59,7 @@ bash vm.sh
 
 ########################################################################################
 # Performance Tuning
+########################################################################################
 watch -n.5 "cat /proc/cpuinfo | grep \"^[c]pu MHz\""
 # hugepage
 # vm.nr_hugepages should be a bit larger than necessary e.g. 8200*2 > 16384
