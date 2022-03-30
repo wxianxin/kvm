@@ -11,7 +11,7 @@
 ########################################################################################
 # toggles
 network_bridge="no"
-rebind_GPU="no"
+rebind_GPU="yes"
 amd_cpu_performance="no"
 
 ########################################################################################
@@ -48,7 +48,7 @@ fi
 ########################################################################################
 
 sudo mount -t hugetlbfs hugetlbfs /dev/hugepages
-sudo sysctl vm.nr_hugepages=5128
+sudo sysctl vm.nr_hugepages=16400
 
 # Standard locations from the Ubuntu `ovmf` package; last one is arbitrary:
 export VGAPT_FIRMWARE_BIN=/usr/share/OVMF/OVMF_CODE.fd
@@ -57,29 +57,27 @@ export VGAPT_FIRMWARE_VARS_TMP=/tmp/OVMF_VARS.fd.tmp
 
 sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
 # sudo chrt -r 1 taskset -c 4-15 /home/coupe/qemu-6.1.0/build/qemu-system-x86_64 \
-sudo chrt -r 1 taskset -c 2-7,10-15 qemu-system-x86_64 \
+sudo chrt -r 1 taskset -c 2-5,8-11 qemu-system-x86_64 \
   -drive if=pflash,format=raw,readonly=on,file=$VGAPT_FIRMWARE_BIN \
   -drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   -enable-kvm \
   -machine q35,accel=kvm,mem-merge=off \
   -cpu host,kvm=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_reset,hv_vendor_id=stevenwang,hv_spinlocks=0x1fff \
-  -smp 12,sockets=1,cores=6,threads=2 \
-  -m 10240 \
+  -smp 8,sockets=1,cores=4,threads=2 \
+  -m 16384 \
   -mem-prealloc \
   -mem-path /dev/hugepages \
-  -vga none \
+  -vga std \
   -rtc base=localtime \
   -boot menu=on \
-  -acpitable file=/home/coupe/kvm/SSDT1.dat \
   -drive file=/home/coupe/D/vm/win11.qcow2,format=qcow2,if=virtio,cache=none \
-  -drive file=/dev/nvme0n1p4,format=raw,if=virtio,cache=none \
-  -drive file=/dev/nvme1n1p3,format=raw,if=virtio,cache=none \
-  -device vfio-pci,host=01:00.0,romfile=/home/coupe/kvm/GA104.rom \
-  -device vfio-pci,host=01:00.1 \
+  -drive file=/dev/nvme0n1p5,format=raw,if=virtio,cache=none \
+  -device vfio-pci,host=03:00.0,romfile=/home/coupe/kvm/6700xt.rom \
+  -device vfio-pci,host=03:00.1 \
   -device qemu-xhci,id=xhci \
-  -device usb-host,bus=xhci.0,hostbus=3,hostaddr=3,port=1 \
-  -device usb-host,bus=xhci.0,hostbus=3,hostaddr=4,port=2 \
-  -device usb-host,bus=xhci.0,hostbus=3,hostaddr=6,port=3 \
+  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=2,port=1 \
+  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=5,port=2 \
+  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=4,port=3 \
 ;
 
 
@@ -107,8 +105,8 @@ fi
 # -device vfio-pci,host=01:00.0,romfile=/home/coupe/D/vm/TU106.rom \
 # -drive file=/dev/sda,format=raw,if=virtio,cache=none,index=1 \
 # -drive file=/home/coupe/D/vm/kvm_win10.qcow2,format=qcow2,if=virtio,cache=none,index=0 \
-# -drive file=/home/coupe/D/vm/Win10_20H2_English_x64.iso,media=cdrom \
-# -drive file=/home/coupe/D/vm/virtio-win-0.1.185.iso,media=cdrom \
+# -drive file=/home/coupe/D/vm/Win11_English_x64v1.iso,media=cdrom \
+# -drive file=/home/coupe/D/vm/virtio-win-0.1.215.iso,media=cdrom \
 # -device vfio-pci,host=01:00.0,romfile=/home/coupe/D/vm/navi_10.rom \
 # -acpitable file=/home/coupe/kvm/SSDT1.dat \
 # -net nic -net bridge,br=br0 \

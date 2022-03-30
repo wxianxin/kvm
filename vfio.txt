@@ -19,7 +19,7 @@ sudo update-grub
 sudo grubby --update-kernel=ALL --args="amd_iommu=on"
 sudo vim /etc/default/grub
     amd_iommu=on iommu=pt rd.driver.pre=vfio-pci
-sudo dracut -f --kver $(uname -r)
+sudo grub2-mkconfig -o /boot/efi/EFI/fedora/grub.cfg 
 
 # reboot and check
 sh list_iommu_group.sh
