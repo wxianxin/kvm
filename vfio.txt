@@ -46,7 +46,7 @@ sudo bash -c "echo options vfio-pci ids=10de:2484,10de:228b > /etc/modprobe.d/vf
 sudo bash -c "echo vfio > /etc/modules-load.d/vfio.conf"
 sudo bash -c "echo vfio-pci > /etc/modules-load.d/vfio-pci.conf"
 # Fedora needs one more:
-echo "vfio_iommu_type1" > /etc/modules-load.d/vfio_iommu_type1.conf
+sudo bash -c "echo "vfio_iommu_type1" > /etc/modules-load.d/vfio_iommu_type1.conf"
 
 ################################################################
 # reboot and check what driver is being used
