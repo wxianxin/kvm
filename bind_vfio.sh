@@ -1,6 +1,9 @@
 #!/bin/bash
 # Steven 20200702
 
+# Print commands and their arguments as they are executed.
+set -x
+
 # # Kill wayland display manager
 # sudo systemctl stop display-manager.service
 
@@ -16,10 +19,18 @@ sudo bash -c "echo 0 > /sys/class/vtconsole/vtcon0/bind"
 sudo bash -c "echo 0 > /sys/class/vtconsole/vtcon1/bind"
 sudo bash -c "echo efi-framebuffer.0 > /sys/bus/platform/drivers/efi-framebuffer/unbind"
 
-sudo modprobe vfio-pci disable_vga=1
+sleep 2
+
+# sudo modprobe -r amdgpu
+
+sudo modprobe vfio
+sudo modprobe vfio-pci
+# sudo modprobe vfio_iommu_type1
 
 sudo bash -c "echo 1002 73df > /sys/bus/pci/drivers/vfio-pci/new_id"
 sudo bash -c "echo 1002 ab28 > /sys/bus/pci/drivers/vfio-pci/new_id"
+
+echo "---- Steven ---- GPU rebound to vfio-pci ----"
 
 # # start wayland display manager
 # sudo systemctl start display-manager.service

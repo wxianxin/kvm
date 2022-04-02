@@ -1,5 +1,7 @@
 #!/bin/bash 
 
+set -x
+
 ########################################################################################
 # qemu-img create -f qcow2 ~/D/vm/win11.qcow2 64G
 # qemu-img create -f qcow2 -b ~/D/vm/win10.qcow2 win10_snapshot.img
@@ -11,7 +13,7 @@
 ########################################################################################
 # toggles
 network_bridge="no"
-rebind_GPU="no"
+rebind_GPU="yes"
 amd_cpu_performance="no"
 
 ########################################################################################
@@ -62,22 +64,24 @@ sudo chrt -r 1 taskset -c 2-5,8-11 qemu-system-x86_64 \
   -drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   -enable-kvm \
   -machine q35,accel=kvm,mem-merge=off \
-  -cpu host,kvm=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_reset,,hv_vendor_id=eeag,hv_spinlocks=0x1fff \
+  -cpu host,kvm=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_reset,hv_vendor_id=eeag,hv_spinlocks=0x1fff \
   -smp 8,sockets=1,cores=4,threads=2 \
   -m 16384 \
   -mem-prealloc \
   -mem-path /dev/hugepages \
-  -vga std \
+  -vga none \
   -rtc base=localtime \
   -boot menu=on \
   -drive file=/home/coupe/D/vm/win11.qcow2,format=qcow2,if=virtio,cache=none \
   -drive file=/dev/nvme0n1p5,format=raw,if=virtio,cache=none \
-  -device vfio-pci,host=03:00.0 \
-  -device vfio-pci,host=03:00.1 \
+  -device pcie-root-port,id=abcd,chassis=1 \
+  -device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
+  -device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
   -device qemu-xhci,id=xhci \
   -device usb-host,bus=xhci.0,hostbus=1,hostaddr=2,port=1 \
   -device usb-host,bus=xhci.0,hostbus=1,hostaddr=3,port=2 \
   -device usb-host,bus=xhci.0,hostbus=1,hostaddr=4,port=3 \
+  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=5,port=4 \
 ;
 
 

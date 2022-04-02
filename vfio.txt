@@ -28,6 +28,7 @@ sh list_iommu_group.sh
 sudo vim /etc/default/grub
     GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_iommu=on isolcpus=4-15 nohz_full=4-15 rcu_nocbs=4-15 module_blacklist=nouveau nouveau.modeset=0 vfio-pci.ids=10de:249d,10de:228b"
     GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_iommu=on isolcpus=2-7,10-15 nohz_full=2-7,10-15 rcu_nocbs=2-7,10-15 module_blacklist=nouveau nouveau.modeset=0 vfio-pci.ids=10de:249d,10de:228b"
+    GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_iommu=on isolcpus=2-5,8-11 nohz_full=2-5,8-11 rcu_nocbs=2-5,8-11 module.blacklist=amdgpu vfio-pci.ids=1002:73df,1002:ab28"
 
 sudo update-grub (or sudo update-initramfs -u)
 
