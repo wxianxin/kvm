@@ -13,7 +13,7 @@ set -x
 ########################################################################################
 # toggles
 network_bridge="no"
-rebind_GPU="yes"
+rebind_GPU="no"
 amd_cpu_performance="no"
 
 ########################################################################################
@@ -50,7 +50,7 @@ fi
 ########################################################################################
 
 sudo mount -t hugetlbfs hugetlbfs /dev/hugepages
-sudo sysctl vm.nr_hugepages=16400
+sudo sysctl vm.nr_hugepages=8200 # 2M a piece
 
 # Standard locations from the Ubuntu `ovmf` package; last one is arbitrary:
 export VGAPT_FIRMWARE_BIN=/usr/share/OVMF/OVMF_CODE.fd
@@ -74,6 +74,7 @@ sudo chrt -r 1 taskset -c 2-5,8-11 qemu-system-x86_64 \
   -boot menu=on \
   -drive file=/home/coupe/D/vm/win11.qcow2,format=qcow2,if=virtio,cache=none \
   -drive file=/dev/nvme0n1p5,format=raw,if=virtio,cache=none \
+  -drive file=/dev/nvme0n1p6,format=raw,if=virtio,cache=none \
   -device pcie-root-port,id=abcd,chassis=1 \
   -device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
   -device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
