@@ -48,6 +48,16 @@ if [ "$amd_cpu_performance" == "yes" ]; then
 fi
 
 ########################################################################################
+# Get USB topology
+set +x
+GPROS_HOSTBUS=$(lsusb | grep 046d:c547 | grep -o -P '(?<=Bus 00).*(?=\ Device)')
+GPROS_HOSTADDR=$(lsusb | grep 046d:c547 | grep -o -P '(?<=Device 00).*(?=:\ )')
+G533_HOSTBUS=$(lsusb | grep 046d:0a66 | grep -o -P '(?<=Bus 00).*(?=\ Device)')
+G533_HOSTADDR=$(lsusb | grep 046d:0a66 | grep -o -P '(?<=Device 00).*(?=:\ )')
+BT_HOSTBUS=$(lsusb | grep 8087:0aaa | grep -o -P '(?<=Bus 00).*(?=\ Device)')
+BT_HOSTADDR=$(lsusb | grep 8087:0aaa | grep -o -P '(?<=Device 00).*(?=:\ )')
+set -x
+########################################################################################
 
 sudo mount -t hugetlbfs hugetlbfs /dev/hugepages
 sudo sysctl vm.nr_hugepages=8200 # 2M a piece
@@ -79,10 +89,9 @@ sudo chrt -r 1 taskset -c 2-5,8-11 qemu-system-x86_64 \
   -device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
   -device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
   -device qemu-xhci,id=xhci \
-  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=2,port=1 \
-  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=3,port=2 \
-  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=4,port=3 \
-  -device usb-host,bus=xhci.0,hostbus=1,hostaddr=5,port=4 \
+  -device usb-host,bus=xhci.0,hostbus=$GPROS_HOSTBUS,hostaddr=$GPROS_HOSTADDR,port=1 \
+  -device usb-host,bus=xhci.0,hostbus=$G533_HOSTBUS,hostaddr=$G533_HOSTADDR,port=2 \
+  -device usb-host,bus=xhci.0,hostbus=$BT_HOSTBUS,hostaddr=$BT_HOSTADDR,port=3 \
 ;
 
 
