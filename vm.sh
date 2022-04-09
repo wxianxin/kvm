@@ -52,6 +52,8 @@ fi
 set +x
 GPROS_HOSTBUS=$(lsusb | sed -n '/046d:c547/p' | sed -e 's/Bus 00//' -e 's/ Device.*$//')
 GPROS_HOSTADDR=$(lsusb | sed -n '/046d:c547/p' | sed -e 's/^.*Device 00//' -e 's/: .*$//')
+PLAY4_HOSTBUS=$(lsusb | sed -n '/041e:3274/p' | sed -e 's/Bus 00//' -e 's/ Device.*$//')
+PLAY4_HOSTADDR=$(lsusb | sed -n '/041e:3274/p' | sed -e 's/^.*Device 00//' -e 's/: .*$//')
 BT_HOSTBUS=$(lsusb | sed -n '/8087:0aaa/p' | sed -e 's/Bus 00//' -e 's/ Device.*$//')
 BT_HOSTADDR=$(lsusb | sed -n '/8087:0aaa/p' | sed -e 's/^.*Device 00//' -e 's/: .*$//')
 set -x
@@ -88,7 +90,8 @@ sudo chrt -r 1 taskset -c 2-5,8-11 qemu-system-x86_64 \
   -device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
   -device qemu-xhci,id=xhci \
   -device usb-host,bus=xhci.0,hostbus=$GPROS_HOSTBUS,hostaddr=$GPROS_HOSTADDR,port=1 \
-  -device usb-host,bus=xhci.0,hostbus=$BT_HOSTBUS,hostaddr=$BT_HOSTADDR,port=2 \
+  -device usb-host,bus=xhci.0,hostbus=$PLAY4_HOSTBUS,hostaddr=$PLAY4_HOSTADDR,port=2 \
+  -device usb-host,bus=xhci.0,hostbus=$BT_HOSTBUS,hostaddr=$BT_HOSTADDR,port=3 \
 ;
 
 
