@@ -6,10 +6,6 @@ set -x
 # qemu-img create -f qcow2 ~/D/vm/win11.qcow2 64G
 # qemu-img create -f qcow2 -b ~/D/vm/win10.qcow2 win10_snapshot.img
 
-# unbind driver after boot process
-# sudo sh -c 'echo "0000:01:00.2" > /sys/bus/pci/devices/0000:01:00.2/driver/unbind'
-# sudo sh -c 'echo "0000:01:00.2" > /sys/bus/pci/drivers/vfio-pci/bind'
-
 ########################################################################################
 # toggles
 network_bridge="no"
@@ -48,16 +44,6 @@ if [ "$amd_cpu_performance" == "yes" ]; then
 fi
 
 ########################################################################################
-# Get USB topology
-set +x
-GPROS_HOSTBUS=$(lsusb | sed -n '/046d:c547/p' | sed -e 's/Bus 00//' -e 's/ Device.*$//')
-GPROS_HOSTADDR=$(lsusb | sed -n '/046d:c547/p' | sed -e 's/^.*Device 00//' -e 's/: .*$//')
-PLAY4_HOSTBUS=$(lsusb | sed -n '/041e:3274/p' | sed -e 's/Bus 00//' -e 's/ Device.*$//')
-PLAY4_HOSTADDR=$(lsusb | sed -n '/041e:3274/p' | sed -e 's/^.*Device 00//' -e 's/: .*$//')
-BT_HOSTBUS=$(lsusb | sed -n '/8087:0aaa/p' | sed -e 's/Bus 00//' -e 's/ Device.*$//')
-BT_HOSTADDR=$(lsusb | sed -n '/8087:0aaa/p' | sed -e 's/^.*Device 00//' -e 's/: .*$//')
-set -x
-########################################################################################
 
 sudo mount -t hugetlbfs hugetlbfs /dev/hugepages
 sudo sysctl vm.nr_hugepages=8200 # 2M a piece
@@ -89,9 +75,9 @@ sudo chrt -r 1 taskset -c 2-5,8-11 qemu-system-x86_64 \
   -device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
   -device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
   -device qemu-xhci,id=xhci \
-  -device usb-host,bus=xhci.0,hostbus=$GPROS_HOSTBUS,hostaddr=$GPROS_HOSTADDR,port=1 \
-  -device usb-host,bus=xhci.0,hostbus=$PLAY4_HOSTBUS,hostaddr=$PLAY4_HOSTADDR,port=2 \
-  -device usb-host,bus=xhci.0,hostbus=$BT_HOSTBUS,hostaddr=$BT_HOSTADDR,port=3 \
+  -device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc547,port=1 \
+  -device usb-host,bus=xhci.0,vendorid=0x041e,productid=0x3274,port=2 \
+  -device usb-host,bus=xhci.0,vendorid=0x8087,productid=0x0aaa,port=3 \
 ;
 
 
@@ -110,22 +96,17 @@ if [ "$amd_cpu_performance" == "yes" ]; then
 fi
 ########################################################################################
 
-
 # taskset 0xFFF0 qemu-system-x86_64 \
 # -m 16384 -mem-prealloc -mem-path /dev/hugepages \
 # -vga none \
 # -vga std \
-# -soundhw hda
 # -device vfio-pci,host=01:00.0,romfile=/home/coupe/D/vm/TU106.rom \
 # -drive file=/dev/sda,format=raw,if=virtio,cache=none,index=1 \
 # -drive file=/home/coupe/D/vm/kvm_win10.qcow2,format=qcow2,if=virtio,cache=none,index=0 \
 # -drive file=/home/coupe/D/vm/Win11_English_x64v1.iso,media=cdrom \
 # -drive file=/home/coupe/D/vm/virtio-win-0.1.215.iso,media=cdrom \
-# -device vfio-pci,host=01:00.0,romfile=/home/coupe/D/vm/navi_10.rom \
 # -acpitable file=/home/coupe/kvm/SSDT1.dat \
 # -net nic -net bridge,br=br0 \
-# -audiodev pa,id=snd0 \
-# -device usb-audio,audiodev=snd0 \
 # -usb -device usb-host,hostbus=1,hostaddr=7 \ # legacy USB passthrough(usb1.1/2.0)
 # -device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no \
 
