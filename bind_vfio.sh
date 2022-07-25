@@ -7,7 +7,7 @@ set -x
 # # Kill wayland display manager
 # sudo systemctl stop display-manager.service
 
-for device in $(lspci | grep Radeon | awk '{print "0000:"$1}')
+for device in $(lspci | grep -e Radeon -e 'Navi 2' | awk '{print "0000:"$1}')
 do
     echo "$device"
     sudo bash -c "echo -n $device > /sys/bus/pci/devices/$device/driver/unbind"
@@ -17,7 +17,7 @@ done
 # https://www.redhat.com/archives/vfio-users/2016-March/msg00088.html
 sudo bash -c "echo 0 > /sys/class/vtconsole/vtcon0/bind"
 sudo bash -c "echo 0 > /sys/class/vtconsole/vtcon1/bind"
-sudo bash -c "echo efi-framebuffer.0 > /sys/bus/platform/drivers/efi-framebuffer/unbind"
+# sudo bash -c "echo efi-framebuffer.0 > /sys/bus/platform/drivers/efi-framebuffer/unbind"
 
 sleep 2
 

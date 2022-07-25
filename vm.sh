@@ -9,7 +9,7 @@ set -x
 ########################################################################################
 # toggles
 network_bridge="no"
-rebind_GPU="no"
+rebind_GPU="yes"
 amd_cpu_performance="no"
 
 ########################################################################################
@@ -48,27 +48,33 @@ fi
 sudo mount -t hugetlbfs hugetlbfs /dev/hugepages
 sudo sysctl vm.nr_hugepages=8200 # 2M a piece
 
-# Standard locations from the Ubuntu `ovmf` package; last one is arbitrary:
-export VGAPT_FIRMWARE_BIN=/usr/share/OVMF/OVMF_CODE.fd
-export VGAPT_FIRMWARE_VARS=/usr/share/OVMF/OVMF_VARS.fd
+########################################################################################
+# # Standard locations from the Ubuntu `ovmf` package
+# export VGAPT_FIRMWARE_BIN=/usr/share/OVMF/OVMF_CODE.fd
+# export VGAPT_FIRMWARE_VARS=/usr/share/OVMF/OVMF_VARS.fd
+# Standard locations from the Archlinux `ovmf` package
+export VGAPT_FIRMWARE_BIN=/usr/share/OVMF/x64/OVMF_CODE.fd
+export VGAPT_FIRMWARE_VARS=/usr/share/OVMF/x64/OVMF_VARS.fd
+# This location path is arbitrary
 export VGAPT_FIRMWARE_VARS_TMP=/tmp/OVMF_VARS.fd.tmp
+########################################################################################
 
 sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
 # sudo chrt -r 1 taskset -c 4-15 /home/coupe/qemu-6.1.0/build/qemu-system-x86_64 \
-sudo chrt -r 1 taskset -c 2-5,8-11 qemu-system-x86_64 \
+sudo chrt -r 1 taskset -c 2-11 qemu-system-x86_64 \
   -drive if=pflash,format=raw,readonly=on,file=$VGAPT_FIRMWARE_BIN \
   -drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   -enable-kvm \
   -machine q35,accel=kvm,mem-merge=off \
   -cpu host,kvm=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_reset,hv_vendor_id=eeag,hv_spinlocks=0x1fff \
-  -smp 8,sockets=1,cores=4,threads=2 \
+  -smp 10,sockets=1,cores=5,threads=2 \
   -m 16384 \
   -mem-prealloc \
   -mem-path /dev/hugepages \
   -vga none \
   -rtc base=localtime \
   -boot menu=on \
-  -drive file=/home/coupe/D/vm/win11.qcow2,format=qcow2,if=virtio,cache=none \
+  -drive file=/home/coupe/vm/win11.qcow2,format=qcow2,if=virtio,cache=none \
   -drive file=/dev/nvme0n1p5,format=raw,if=virtio,cache=none \
   -drive file=/dev/nvme0n1p6,format=raw,if=virtio,cache=none \
   -device pcie-root-port,id=abcd,chassis=1 \
@@ -76,10 +82,11 @@ sudo chrt -r 1 taskset -c 2-5,8-11 qemu-system-x86_64 \
   -device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
   -device qemu-xhci,id=xhci \
   -device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc547,port=1 \
-  -device usb-host,bus=xhci.0,vendorid=0x041e,productid=0x3274,port=2 \
   -device usb-host,bus=xhci.0,vendorid=0x8087,productid=0x0aaa,port=3 \
+  -audiodev pa,id=ad0,out.mixing-engine=off,server=unix:/run/user/1000/pulse/native \
+  -device ich9-intel-hda \
+  -device hda-duplex,audiodev=ad0 \
 ;
-
 
 ########################################################################################
 # undo rebind GPU
@@ -109,11 +116,12 @@ fi
 # -net nic -net bridge,br=br0 \
 # -usb -device usb-host,hostbus=1,hostaddr=7 \ # legacy USB passthrough(usb1.1/2.0)
 # -device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no \
+#### Creative USB Audio
+# -device usb-host,bus=xhci.0,vendorid=0x041e,productid=0x3274,port=2 \
 
 
 ########################################################################################
 # hv_vendor_id is used for Nvidia Error 43 prevention
-# If vm created using virtio, DO NOT qemu-system-x86_64 start without drive option "if=virtio", otherwise BSOD
 # chrt: -r robin round scheduler
 # USB: ehci(usb2.0) xchi(usb3.0) controller
 # About audio device (also QEMU USB emulator): such implementation requires very tight timing on the clock, so the performance is usually not satisfactory at first and it needs extensive tweaking.
