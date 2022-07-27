@@ -74,9 +74,11 @@ sudo chrt -r 1 taskset -c 2-11 qemu-system-x86_64 \
   -vga none \
   -rtc base=localtime \
   -boot menu=on \
-  -drive file=/home/coupe/vm/win11.qcow2,format=qcow2,if=virtio,cache=none \
-  -drive file=/dev/nvme0n1p5,format=raw,if=virtio,cache=none \
-  -drive file=/dev/nvme0n1p6,format=raw,if=virtio,cache=none \
+  -object iothread,id=io0 \
+  -device virtio-blk-pci,drive=disk0,iothread=io0 \
+  -drive if=none,id=disk0,cache=none,aio=threads,format=qcow2,file=/home/coupe/vm/win11.qcow2 \
+  -device virtio-blk-pci,drive=disk1,iothread=io0 \
+  -drive if=none,id=disk1,cache=none,aio=threads,format=raw,file=/dev/nvme0n1p5 \
   -device pcie-root-port,id=abcd,chassis=1 \
   -device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
   -device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
