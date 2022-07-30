@@ -23,11 +23,23 @@ sudo grub2-mkconfig -o /boot/efi/EFI/fedora/grub.cfg
 
 # reboot and check
 sh list_iommu_group.sh
+
+########################################################################################
+# CPU isolation
+## Very good guide: https://www.suse.com/c/cpu-isolation-practical-example-part-5/
+## No need to pass the “rcu_nocbs=” kernel parameter as that is automatically taken care of while passing the “nohz_full=” parameter.
+## Using 'isolcpus=' is not advised because the isolation configuration can’t be later changed on runtime. This is why “isolcpus” tends to be considered as “deprecated” despite it being still in use. It may remain useful with specialized or embedded kernels that haven’t been built with cpusets/cgroups support. 
+## At a lower level, it is also possible to affine each individual task to the desired set of CPUs using tools like taskset or relying on APIs like sched_setaffinity().  On a setup without cpusets support, it has the advantage to allow for affinity change on runtime, unlike what “isolcpus” does. The drawback is that it requires more finegrained work.
+
+sudo vim /etc/default/grub
+    GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet intel_iommu=on iommu=pt isolcpus=2-N nohz_full=2-N"
+
+
 ########################################################################################
 # prevent the default driver to bind to the graphics card. # OR unbind driver before passthrough
+########
 sudo vim /etc/default/grub
     GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_iommu=on iommu=pt isolcpus=4-15 nohz_full=4-15 rcu_nocbs=4-15 module_blacklist=nouveau nouveau.modeset=0 vfio-pci.ids=10de:249d,10de:228b"
-    GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_iommu=on iommu=pt isolcpus=2-7,10-15 nohz_full=2-7,10-15 rcu_nocbs=2-7,10-15 module_blacklist=nouveau nouveau.modeset=0 vfio-pci.ids=10de:249d,10de:228b"
     GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_iommu=on iommu=pt isolcpus=2-5,8-11 nohz_full=2-5,8-11 rcu_nocbs=2-5,8-11 module.blacklist=amdgpu vfio-pci.ids=1002:73df,1002:ab28"
 
 sudo grub-mkconfig -o /boot/grub/grub.cfg (or sudo update-grub; or sudo update-initramfs -u)
@@ -75,9 +87,6 @@ lstopo
 # CPU pinning using taskset
 # 1111111111000000=0xFFC0 (binary is reverse of the sequence of cpu id)
 taskset 0xFFC0 qemu-system-x86_64 \blabla
-# cpu isolation kernel parameters
-sudo vim /etc/default/grub
-    GRUB_CMDLINE_LINUX_DEFAULT="quiet splash amd_iommu=on isolcpus=4-15 nohz_full=4-15 rcu_nocbs=4-15"
 
 # OVMF screen resolution
 # Need to `ESC` during `Tianocore` UEFI screen, set resolution, then `reset`

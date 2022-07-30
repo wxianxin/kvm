@@ -1,5 +1,10 @@
 #!/bin/bash 
 
+# Very useful guide for using qemu: https://archive.fosdem.org/2018/schedule/event/vai_qemu_jungle/
+# how to use help:
+#   qemu-system-x86_64 -device help
+#   qemu-system-x86_64 -device pcie-root-port,help
+
 set -x
 
 ########################################################################################
@@ -62,32 +67,34 @@ export VGAPT_FIRMWARE_VARS_TMP=/tmp/OVMF_VARS.fd.tmp
 sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
 # sudo chrt -r 1 taskset -c 4-15 /home/coupe/qemu-6.1.0/build/qemu-system-x86_64 \
 sudo chrt -r 1 taskset -c 2-11 qemu-system-x86_64 \
-  -drive if=pflash,format=raw,readonly=on,file=$VGAPT_FIRMWARE_BIN \
-  -drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
-  -enable-kvm \
-  -machine q35,accel=kvm,mem-merge=off \
-  -cpu host,kvm=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_reset,hv_vendor_id=eeag,hv_spinlocks=0x1fff \
-  -smp 10,sockets=1,cores=5,threads=2 \
-  -m 16384 \
-  -mem-prealloc \
-  -mem-path /dev/hugepages \
-  -vga none \
-  -rtc base=localtime \
-  -boot menu=on \
-  -object iothread,id=io0 \
-  -device virtio-blk-pci,drive=disk0,iothread=io0 \
-  -drive if=none,id=disk0,cache=none,aio=threads,format=qcow2,file=/home/coupe/vm/win11.qcow2 \
-  -device virtio-blk-pci,drive=disk1,iothread=io0 \
-  -drive if=none,id=disk1,cache=none,aio=threads,format=raw,file=/dev/nvme0n1p5 \
-  -device pcie-root-port,id=abcd,chassis=1 \
-  -device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
-  -device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
-  -device qemu-xhci,id=xhci \
-  -device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc547,port=1 \
-  -device usb-host,bus=xhci.0,vendorid=0x8087,productid=0x0aaa,port=3 \
-  -audiodev pa,id=ad0,out.mixing-engine=off,server=unix:/run/user/1000/pulse/native \
-  -device ich9-intel-hda \
-  -device hda-duplex,audiodev=ad0 \
+  --name stevenqemu,debug-threads=on \
+  --drive if=pflash,format=raw,readonly=on,file=$VGAPT_FIRMWARE_BIN \
+  --drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
+  --enable-kvm \
+  --machine q35,accel=kvm,mem-merge=off \
+  --cpu host,kvm=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_reset,hv_vendor_id=eeag,hv_spinlocks=0x1fff \
+  --smp 10,sockets=1,cores=5,threads=2 \
+  --m 16384 \
+  --mem-prealloc \
+  --mem-path /dev/hugepages \
+  --vga none \
+  --rtc base=localtime \
+  --boot menu=on \
+  --object iothread,id=io0 \
+  --blockdev file,node-name=f0,filename=/home/coupe/vm/win11.qcow2 \
+  --blockdev qcow2,node-name=q0,file=f0 \
+  --device virtio-blk-pci,drive=q0,iothread=io0 \
+  --blockdev host_device,node-name=q1,filename=/dev/nvme0n1p5 \
+  --device virtio-blk-pci,drive=q1,iothread=io0 \
+  --device pcie-root-port,id=abcd,chassis=1 \
+  --device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
+  --device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
+  --device qemu-xhci,id=xhci \
+  --device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc547,port=1 \
+  --device usb-host,bus=xhci.0,vendorid=0x8087,productid=0x0aaa,port=3 \
+  --audiodev pa,id=ad0,out.mixing-engine=off,server=unix:/run/user/1000/pulse/native \
+  --device ich9-intel-hda \
+  --device hda-duplex,audiodev=ad0 \
 ;
 
 ########################################################################################
@@ -107,19 +114,18 @@ fi
 
 # taskset 0xFFF0 qemu-system-x86_64 \
 # -m 16384 -mem-prealloc -mem-path /dev/hugepages \
-# -vga none \
-# -vga std \
-# -device vfio-pci,host=01:00.0,romfile=/home/coupe/D/vm/TU106.rom \
-# -drive file=/dev/sda,format=raw,if=virtio,cache=none,index=1 \
-# -drive file=/home/coupe/D/vm/kvm_win10.qcow2,format=qcow2,if=virtio,cache=none,index=0 \
-# -drive file=/home/coupe/D/vm/Win11_English_x64v1.iso,media=cdrom \
-# -drive file=/home/coupe/D/vm/virtio-win-0.1.215.iso,media=cdrom \
-# -acpitable file=/home/coupe/kvm/SSDT1.dat \
-# -net nic -net bridge,br=br0 \
-# -usb -device usb-host,hostbus=1,hostaddr=7 \ # legacy USB passthrough(usb1.1/2.0)
-# -device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no \
+# --vga none \
+# --vga std \
+# --device vfio-pci,host=01:00.0,romfile=/home/coupe/D/vm/TU106.rom \
+# --drive if=none,id=disk0,cache=none,aio=threads,format=qcow2,file=/home/coupe/vm/win11.qcow2 \
+# --drive if=none,id=disk1,cache=none,aio=threads,format=raw,file=/dev/nvme0n1p5 \
+# --drive file=/home/coupe/D/vm/Win11_English_x64v1.iso,media=cdrom \
+# --drive file=/home/coupe/D/vm/virtio-win-0.1.215.iso,media=cdrom \
+# --acpitable file=/home/coupe/kvm/SSDT1.dat \
+# --usb -device usb-host,hostbus=1,hostaddr=7 \ # legacy USB passthrough(usb1.1/2.0)
+# --device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no \
 #### Creative USB Audio
-# -device usb-host,bus=xhci.0,vendorid=0x041e,productid=0x3274,port=2 \
+# --device usb-host,bus=xhci.0,vendorid=0x041e,productid=0x3274,port=2 \
 
 
 ########################################################################################
