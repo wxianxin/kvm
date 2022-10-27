@@ -66,14 +66,14 @@ export VGAPT_FIRMWARE_VARS_TMP=/tmp/OVMF_VARS.fd.tmp
 
 sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
 # sudo chrt -r 1 taskset -c 4-15 /home/coupe/qemu-6.1.0/build/qemu-system-x86_64 \
-sudo chrt -r 1 taskset -c 4-11 qemu-system-x86_64 \
+sudo chrt -r 1 taskset -c 0-11 qemu-system-x86_64 \
   --name stevenqemu,debug-threads=on \
   --drive if=pflash,format=raw,readonly=on,file=$VGAPT_FIRMWARE_BIN \
   --drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   --enable-kvm \
   --machine q35,accel=kvm,mem-merge=off \
   --cpu host,kvm=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_reset,hv_vendor_id=eeag,hv_spinlocks=0x1fff \
-  --smp 8,sockets=1,cores=4,threads=2 \
+  --smp 12,sockets=1,cores=6,threads=2 \
   --m 16384 \
   --mem-prealloc \
   --mem-path /dev/hugepages \
@@ -88,11 +88,14 @@ sudo chrt -r 1 taskset -c 4-11 qemu-system-x86_64 \
   --blockdev host_device,node-name=q2,filename=/dev/nvme0n1p6 \
   --device virtio-blk-pci,drive=q1,iothread=io0 \
   --device virtio-blk-pci,drive=q2,iothread=io0 \
+  --drive file=/home/coupe/vm/Win11_22H2_English_x64v1.iso,media=cdrom \
+  --drive file=/home/coupe/vm/virtio-win-0.1.225.iso,media=cdrom \
   --device pcie-root-port,id=abcd,chassis=1 \
   --device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
   --device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
   --device qemu-xhci,id=xhci \
   --device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc547,port=1 \
+  --device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc548,port=2 \
   --device usb-host,bus=xhci.0,vendorid=0x8087,productid=0x0aaa,port=3 \
   --audiodev pa,id=ad0,out.mixing-engine=off,server=unix:/run/user/1000/pulse/native \
   --device ich9-intel-hda \
