@@ -3,6 +3,10 @@
 ./configure --target-list=x86_64-softmmu --enable-libusb
 
 ########################################################################################
+# UEFI setup
+1. enable virtualization (usually enabled by default)
+2. disable Smart Access Memory for VFIO GPU (Sometimes called CAM in UEFI)
+########################################################################################
 # Install necessary packages
 sudo apt install qemu-kvm
 sudo apt install ovmf

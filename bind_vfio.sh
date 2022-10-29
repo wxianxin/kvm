@@ -21,11 +21,11 @@ sudo bash -c "echo 0 > /sys/class/vtconsole/vtcon1/bind"
 
 sleep 2
 
-# sudo modprobe -r amdgpu
+sudo modprobe -r amdgpu
 
 sudo modprobe vfio
 sudo modprobe vfio-pci
-# sudo modprobe vfio_iommu_type1
+sudo modprobe vfio_iommu_type1
 
 sudo bash -c "echo 1002 73df > /sys/bus/pci/drivers/vfio-pci/new_id"
 sudo bash -c "echo 1002 ab28 > /sys/bus/pci/drivers/vfio-pci/new_id"

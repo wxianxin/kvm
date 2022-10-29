@@ -17,12 +17,13 @@ sudo bash -c "echo 0000:03:00.1 > /sys/bus/pci/drivers/snd_hda_intel/bind"
 # sudo bash -c "echo 0000:01:00.3 > /sys/bus/pci/drivers/nvidia-gpu/bind"
 sleep 2
 
-modprobe -r vfio
-modprobe -r vfio-pci
+sudo modprobe -r vfio
+sudo modprobe -r vfio-pci
+sudo modprobe -r vfio_iommu_type1
 
-modprobe amdgpu
+sudo modprobe amdgpu
 
-echo 1 > /sys/class/vtconsole/vtcon0/bind
-echo 1 > /sys/class/vtconsole/vtcon1/bind
-echo "efi-framebuffer.0" > /sys/bus/platform/drivers/efi-framebuffer/bind
+sudo bash -c "echo 1 > /sys/class/vtconsole/vtcon0/bind"
+sudo bash -c "echo 1 > /sys/class/vtconsole/vtcon1/bind"
+# sudo bash -c "echo \"efi-framebuffer.0\" > /sys/bus/platform/drivers/efi-framebuffer/bind"
 

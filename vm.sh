@@ -14,7 +14,7 @@ set -x
 ########################################################################################
 # toggles
 network_bridge="no"
-rebind_GPU="yes"
+rebind_GPU="no"
 amd_cpu_performance="no"
 
 ########################################################################################
@@ -65,9 +65,12 @@ export VGAPT_FIRMWARE_VARS_TMP=/tmp/OVMF_VARS.fd.tmp
 ########################################################################################
 
 sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
+# sudo taskset 0xFFF0 qemu-system-x86_64 \
 # sudo chrt -r 1 taskset -c 4-15 /home/coupe/qemu-6.1.0/build/qemu-system-x86_64 \
-sudo chrt -r 1 taskset -c 0-11 qemu-system-x86_64 \
+# sudo chrt -r 1 taskset -c 0-11 qemu-system-x86_64 \
+sudo qemu-system-x86_64 \
   --name stevenqemu,debug-threads=on \
+  --pidfile /run/steven_qemu.pid \
   --drive if=pflash,format=raw,readonly=on,file=$VGAPT_FIRMWARE_BIN \
   --drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   --enable-kvm \
@@ -81,22 +84,19 @@ sudo chrt -r 1 taskset -c 0-11 qemu-system-x86_64 \
   --rtc base=localtime \
   --boot menu=on \
   --object iothread,id=io0 \
-  --blockdev file,node-name=f0,filename=/home/coupe/vm/win11.qcow2 \
+  --blockdev file,node-name=f0,filename=/home/coupe/D/vm/win11.qcow2 \
   --blockdev qcow2,node-name=q0,file=f0 \
   --device virtio-blk-pci,drive=q0,iothread=io0 \
   --blockdev host_device,node-name=q1,filename=/dev/nvme0n1p5 \
   --blockdev host_device,node-name=q2,filename=/dev/nvme0n1p6 \
   --device virtio-blk-pci,drive=q1,iothread=io0 \
   --device virtio-blk-pci,drive=q2,iothread=io0 \
-  --drive file=/home/coupe/vm/Win11_22H2_English_x64v1.iso,media=cdrom \
-  --drive file=/home/coupe/vm/virtio-win-0.1.225.iso,media=cdrom \
   --device pcie-root-port,id=abcd,chassis=1 \
   --device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
   --device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
   --device qemu-xhci,id=xhci \
   --device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc547,port=1 \
   --device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc548,port=2 \
-  --device usb-host,bus=xhci.0,vendorid=0x8087,productid=0x0aaa,port=3 \
   --audiodev pa,id=ad0,out.mixing-engine=off,server=unix:/run/user/1000/pulse/native \
   --device ich9-intel-hda \
   --device hda-duplex,audiodev=ad0 \
@@ -117,7 +117,6 @@ if [ "$amd_cpu_performance" == "yes" ]; then
 fi
 ########################################################################################
 
-# taskset 0xFFF0 qemu-system-x86_64 \
 # -m 16384 -mem-prealloc -mem-path /dev/hugepages \
 # --vga none \
 # --vga std \
@@ -138,3 +137,4 @@ fi
 # chrt: -r robin round scheduler
 # USB: ehci(usb2.0) xchi(usb3.0) controller
 # About audio device (also QEMU USB emulator): such implementation requires very tight timing on the clock, so the performance is usually not satisfactory at first and it needs extensive tweaking.
+# Error about init pa when sudo qemu: fix: sudo cp /home/coupe/.config/pulse/cookie /root/.config/pulse/cookie
