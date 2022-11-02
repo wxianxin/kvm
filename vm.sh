@@ -96,7 +96,7 @@ sudo qemu-system-x86_64 \
   --device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
   --device qemu-xhci,id=xhci \
   --device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc547,port=1 \
-  --device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc548,port=2 \
+  --device usb-host,bus=xhci.0,vendorid=0x8087,productid=0x0aaa,port=2 \
   --audiodev pa,id=ad0,out.mixing-engine=off,server=unix:/run/user/1000/pulse/native \
   --device ich9-intel-hda \
   --device hda-duplex,audiodev=ad0 \
