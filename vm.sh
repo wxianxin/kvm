@@ -8,6 +8,11 @@
 set -x
 
 ########################################################################################
+# storage IO
+
+# iscsi dependency
+# pacman -S qemu-block-iscsi
+
 # qemu-img create -f qcow2 ~/D/vm/win11.qcow2 64G
 # qemu-img create -f qcow2 -b ~/D/vm/win10.qcow2 win10_snapshot.img
 
@@ -80,17 +85,20 @@ sudo qemu-system-x86_64 \
   --m 16384 \
   --mem-prealloc \
   --mem-path /dev/hugepages \
-  --vga none \
+  --nodefaults \
   --rtc base=localtime \
   --boot menu=on \
   --object iothread,id=io0 \
   --blockdev file,node-name=f0,filename=/home/coupe/D/vm/win11.qcow2 \
   --blockdev qcow2,node-name=q0,file=f0 \
   --device virtio-blk-pci,drive=q0,iothread=io0 \
-  --blockdev host_device,node-name=q1,filename=/dev/nvme0n1p5 \
-  --blockdev host_device,node-name=q2,filename=/dev/nvme0n1p6 \
+  --blockdev file,node-name=f1,filename=/home/coupe/nfs/drive.qcow2 \
+  --blockdev qcow2,node-name=q1,file=f1 \
   --device virtio-blk-pci,drive=q1,iothread=io0 \
+  --blockdev host_device,node-name=q2,filename=/dev/nvme0n1p5 \
   --device virtio-blk-pci,drive=q2,iothread=io0 \
+  --blockdev host_device,node-name=q3,filename=/dev/nvme0n1p6 \
+  --device virtio-blk-pci,drive=q3,iothread=io0 \
   --device pcie-root-port,id=abcd,chassis=1 \
   --device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
   --device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
@@ -100,7 +108,14 @@ sudo qemu-system-x86_64 \
   --audiodev pa,id=ad0,out.mixing-engine=off,server=unix:/run/user/1000/pulse/native \
   --device ich9-intel-hda \
   --device hda-duplex,audiodev=ad0 \
+  -nic user,model=virtio-net-pci \
 ;
+
+  # --blockdev file,node-name=f1,filename=iscsi://%@192.168.50.40:3260/iqn.2022-11.stevenwang.trade:drive/0 \
+  #
+#   --iscsi initiator-name=iqn.2022-11.stevenwang.trade:node01.initiator01 \
+#   --iscsi header-digest=CRC32C \
+#   --drive file=iscsi://%@192.168.50.40:3260/iqn.2022-11.stevenwang.trade:drive/0,format=raw,if=none,id=iscsidrive,cache=none \
 
 ########################################################################################
 # undo rebind GPU
