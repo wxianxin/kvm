@@ -95,10 +95,10 @@ sudo qemu-system-x86_64 \
   --blockdev file,node-name=f1,filename=/home/coupe/nfs/drive.qcow2 \
   --blockdev qcow2,node-name=q1,file=f1 \
   --device virtio-blk-pci,drive=q1,iothread=io0 \
-  --blockdev host_device,node-name=q2,filename=/dev/nvme0n1p5 \
-  --device virtio-blk-pci,drive=q2,iothread=io0 \
-  --blockdev host_device,node-name=q3,filename=/dev/nvme0n1p6 \
-  --device virtio-blk-pci,drive=q3,iothread=io0 \
+  `#--blockdev host_device,node-name=q2,filename=/dev/nvme0n1p5` \
+  `#--device virtio-blk-pci,drive=q2,iothread=io0` \
+  `#--blockdev host_device,node-name=q3,filename=/dev/nvme0n1p6` \
+  `#--device virtio-blk-pci,drive=q3,iothread=io0` \
   --device pcie-root-port,id=abcd,chassis=1 \
   --device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
   --device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
