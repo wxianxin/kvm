@@ -27,17 +27,23 @@ amd_cpu_performance="no"
 # a bridge is like a virtual switch
 # a tap device is like a virtual nic
 # virtio driver can leverage tap as nic for guest
+# NOTE: dhclient is requried.
 if [ "$network_bridge" == "yes" ]; then
     echo "network_bridge: $network_bridge"
     sudo ip link add br0 type bridge
     sudo ip link set dev br0 up
-    sudo ip link set dev enp3s0 master br0
+    sudo ip link set dev enp0s31f6 master br0
     sudo ip link set enp3s0 up
     sudo ip tuntap add mode tap tap0
     sudo ip link set tap0 master br0
     sudo ip link set tap0 up
     sudo dhclient br0
 fi
+
+########################################################################################
+# mount the storage. NOTE: this has to be after the network bridge setup.
+sudo mount /dev/nvme0n1p9 D
+sudo mount -t cifs -o username=username,password=password,uid=coupe,vers=2.0 //192.168.50.1/x ~/nfs
 
 ########################################################################################
 # rebind GPU
@@ -73,7 +79,7 @@ sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
 # sudo taskset 0xFFF0 qemu-system-x86_64 \
 # sudo chrt -r 1 taskset -c 4-15 /home/coupe/qemu-6.1.0/build/qemu-system-x86_64 \
 # sudo chrt -r 1 taskset -c 0-11 qemu-system-x86_64 \
-sudo qemu-system-x86_64 \
+sudo systemd-run --slice=steven_qemu.slice --property="AllowedCPUs=0-15" qemu-system-x86_64 \
   --name stevenqemu,debug-threads=on \
   --pidfile /run/steven_qemu.pid \
   --drive if=pflash,format=raw,readonly=on,file=$VGAPT_FIRMWARE_BIN \
@@ -86,6 +92,9 @@ sudo qemu-system-x86_64 \
   --mem-prealloc \
   --mem-path /dev/hugepages \
   --nodefaults \
+  --vga std \
+  --nographic \
+  --vnc :0 \
   --rtc base=localtime \
   --boot menu=on \
   --object iothread,id=io0 \
@@ -99,16 +108,17 @@ sudo qemu-system-x86_64 \
   `#--device virtio-blk-pci,drive=q2,iothread=io0` \
   `#--blockdev host_device,node-name=q3,filename=/dev/nvme0n1p6` \
   `#--device virtio-blk-pci,drive=q3,iothread=io0` \
-  --device pcie-root-port,id=abcd,chassis=1 \
-  --device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
-  --device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
+  `#--device pcie-root-port,id=abcd,chassis=1` \
+  `#--device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on` \
+  `#--device vfio-pci,host=03:00.1,bus=abcd,addr=00.1` \
   --device qemu-xhci,id=xhci \
   --device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc547,port=1 \
   --device usb-host,bus=xhci.0,vendorid=0x8087,productid=0x0aaa,port=2 \
   --audiodev pa,id=ad0,out.mixing-engine=off,server=unix:/run/user/1000/pulse/native \
   --device ich9-intel-hda \
   --device hda-duplex,audiodev=ad0 \
-  -nic user,model=virtio-net-pci \
+  --device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no \
+  `#--nic user,model=virtio-net-pci` \
 ;
 
   # --blockdev file,node-name=f1,filename=iscsi://%@192.168.50.40:3260/iqn.2022-11.stevenwang.trade:drive/0 \
@@ -132,9 +142,7 @@ if [ "$amd_cpu_performance" == "yes" ]; then
 fi
 ########################################################################################
 
-# -m 16384 -mem-prealloc -mem-path /dev/hugepages \
 # --vga none \
-# --vga std \
 # --device vfio-pci,host=01:00.0,romfile=/home/coupe/D/vm/TU106.rom \
 # --drive if=none,id=disk0,cache=none,aio=threads,format=qcow2,file=/home/coupe/vm/win11.qcow2 \
 # --drive if=none,id=disk1,cache=none,aio=threads,format=raw,file=/dev/nvme0n1p5 \
@@ -142,12 +150,9 @@ fi
 # --drive file=/home/coupe/D/vm/virtio-win-0.1.215.iso,media=cdrom \
 # --acpitable file=/home/coupe/kvm/SSDT1.dat \
 # --usb -device usb-host,hostbus=1,hostaddr=7 \ # legacy USB passthrough(usb1.1/2.0)
-# --device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no \
-#### Creative USB Audio
-# --device usb-host,bus=xhci.0,vendorid=0x041e,productid=0x3274,port=2 \
-
 
 ########################################################################################
+# Notes:
 # hv_vendor_id is used for Nvidia Error 43 prevention
 # chrt: -r robin round scheduler
 # USB: ehci(usb2.0) xchi(usb3.0) controller

@@ -4,13 +4,16 @@
 
 ########################################################################################
 # systemd-cgls  # To display the whole cgroups hierarchy on your system
+# systemctl list-units --type=service --state=running
+# systemctl status --full
+# systemctl status --full myservice.service
+# journalctl -b -u myservice.service
+# Good reading on how to configure systemd unit: https://www.digitalocean.com/community/tutorials/understanding-systemd-units-and-unit-files
 
-# TODO create systemd unit for vm and then pin the thread
-
-# # pin all other system threads
-# sudo systemctl set-property --runtime -- user.slice AllowedCPUs=16-19
-# sudo systemctl set-property --runtime -- system.slice AllowedCPUs=16-19
-# sudo systemctl set-property --runtime -- init.scope AllowedCPUs=16-19
+# pin all other system threads
+sudo systemctl set-property --runtime -- user.slice AllowedCPUs=16-19
+sudo systemctl set-property --runtime -- system.slice AllowedCPUs=16-19
+sudo systemctl set-property --runtime -- init.scope AllowedCPUs=16-19
 
 ########################################################################################
 # In qemu command window, get vcpu process id by executing `info cpus`
