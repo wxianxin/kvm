@@ -14,7 +14,15 @@ set -x
 # pacman -S qemu-block-iscsi
 
 # qemu-img create -f qcow2 ~/D/vm/win11.qcow2 64G
-# qemu-img create -f qcow2 -b ~/D/vm/win10.qcow2 win10_snapshot.img
+# qemu-img create -f qcow2 -o backing_file=/path/to/base/image.qcow2,backing_fmt=qcow2 /path/to/snapshot/image.qcow2
+# qemu-system-x86_64 -drive file=/path/to/snapshot/image.qcow2,if=virtio
+
+# remove qcow2 sparse space and compression
+## Noop conversion (qcow2-to-qcow2) removes sparse space:
+# qemu-img convert -O qcow2 source.qcow2 shrunk.qcow2
+## You can also try add compression (-c) to the output image:
+# qemu-img convert -c -O qcow2 source.qcow2 shrunk.qcow2
+
 
 ########################################################################################
 # toggles
@@ -43,7 +51,6 @@ fi
 ########################################################################################
 # mount the storage. NOTE: this has to be after the network bridge setup.
 sudo mount /dev/nvme0n1p9 D
-sudo mount -t cifs -o username=username,password=password,uid=coupe,vers=2.0 //192.168.50.1/x ~/nfs
 
 ########################################################################################
 # rebind GPU
@@ -79,7 +86,7 @@ sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
 # sudo taskset 0xFFF0 qemu-system-x86_64 \
 # sudo chrt -r 1 taskset -c 4-15 /home/coupe/qemu-6.1.0/build/qemu-system-x86_64 \
 # sudo chrt -r 1 taskset -c 0-11 qemu-system-x86_64 \
-sudo systemd-run --slice=steven_qemu.slice --property="AllowedCPUs=0-15" qemu-system-x86_64 \
+sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="AllowedCPUs=0-15" qemu-system-x86_64 \
   --name stevenqemu,debug-threads=on \
   --pidfile /run/steven_qemu.pid \
   --drive if=pflash,format=raw,readonly=on,file=$VGAPT_FIRMWARE_BIN \
@@ -92,16 +99,16 @@ sudo systemd-run --slice=steven_qemu.slice --property="AllowedCPUs=0-15" qemu-sy
   --mem-prealloc \
   --mem-path /dev/hugepages \
   --nodefaults \
-  --vga std \
   --nographic \
+  --vga virtio \
   --vnc :0 \
   --rtc base=localtime \
   --boot menu=on \
   --object iothread,id=io0 \
-  --blockdev file,node-name=f0,filename=/home/coupe/D/vm/win11.qcow2 \
+  --blockdev file,node-name=f0,filename=/home/coupe/D/vm/win11_0.qcow2 \
   --blockdev qcow2,node-name=q0,file=f0 \
   --device virtio-blk-pci,drive=q0,iothread=io0 \
-  --blockdev file,node-name=f1,filename=/home/coupe/nfs/drive.qcow2 \
+  --blockdev file,node-name=f1,filename=/home/coupe/L/drive.qcow2 \
   --blockdev qcow2,node-name=q1,file=f1 \
   --device virtio-blk-pci,drive=q1,iothread=io0 \
   `#--blockdev host_device,node-name=q2,filename=/dev/nvme0n1p5` \
@@ -113,7 +120,7 @@ sudo systemd-run --slice=steven_qemu.slice --property="AllowedCPUs=0-15" qemu-sy
   `#--device vfio-pci,host=03:00.1,bus=abcd,addr=00.1` \
   --device qemu-xhci,id=xhci \
   --device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc547,port=1 \
-  --device usb-host,bus=xhci.0,vendorid=0x8087,productid=0x0aaa,port=2 \
+  --device usb-host,bus=xhci.0,vendorid=0x4b42,productid=0x3738,port=2 \
   --audiodev pa,id=ad0,out.mixing-engine=off,server=unix:/run/user/1000/pulse/native \
   --device ich9-intel-hda \
   --device hda-duplex,audiodev=ad0 \

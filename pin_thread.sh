@@ -8,7 +8,12 @@
 # systemctl status --full
 # systemctl status --full myservice.service
 # journalctl -b -u myservice.service
+########################################
+# clean up failed units and free up the service name spaces.
+# sudo systemctl --failed
+# sudo systemctl reset-failed
 # Good reading on how to configure systemd unit: https://www.digitalocean.com/community/tutorials/understanding-systemd-units-and-unit-files
+########################################
 
 # pin all other system threads
 sudo systemctl set-property --runtime -- user.slice AllowedCPUs=16-19
