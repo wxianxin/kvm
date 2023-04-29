@@ -1,5 +1,8 @@
 #!/bin/bash 
 
+# to run as systemd unit service(Use root account, as sudo command may timeout after long sessions):
+# systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="AllowedCPUs=0-15" /bin/bash /path/to/vm.sh
+########################################################################################
 # Very useful guide for using qemu: https://archive.fosdem.org/2018/schedule/event/vai_qemu_jungle/
 # how to use help:
 #   qemu-system-x86_64 -device help
@@ -23,12 +26,12 @@ set -x
 ## You can also try add compression (-c) to the output image:
 # qemu-img convert -c -O qcow2 source.qcow2 shrunk.qcow2
 
-
 ########################################################################################
 # toggles
 network_bridge="no"
-rebind_GPU="no"
+rebind_GPU="yes"
 amd_cpu_performance="no"
+reverse_rebind_GPU="yes"
 
 ########################################################################################
 # network bridge
@@ -50,15 +53,13 @@ fi
 
 ########################################################################################
 # mount the storage. NOTE: this has to be after the network bridge setup.
-sudo mount /dev/nvme0n1p9 D
-
+sudo mount /dev/nvme0n1p9 /home/coupe/D
 ########################################################################################
 # rebind GPU
 if [ "$rebind_GPU" == "yes" ]; then
     echo "rebind_GPU: $rebind_GPU"
     sudo bash /home/coupe/kvm/bind_vfio.sh
 fi
-
 ########################################################################################
 # set AMD CPU to performance mode
 if [ "$amd_cpu_performance" == "yes" ]; then
@@ -70,7 +71,6 @@ fi
 
 sudo mount -t hugetlbfs hugetlbfs /dev/hugepages
 sudo sysctl vm.nr_hugepages=8200 # 2M a piece
-
 ########################################################################################
 # # Standard locations from the Ubuntu `ovmf` package
 # export VGAPT_FIRMWARE_BIN=/usr/share/OVMF/OVMF_CODE.fd
@@ -86,7 +86,7 @@ sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
 # sudo taskset 0xFFF0 qemu-system-x86_64 \
 # sudo chrt -r 1 taskset -c 4-15 /home/coupe/qemu-6.1.0/build/qemu-system-x86_64 \
 # sudo chrt -r 1 taskset -c 0-11 qemu-system-x86_64 \
-sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="AllowedCPUs=0-15" qemu-system-x86_64 \
+qemu-system-x86_64 \
   --name stevenqemu,debug-threads=on \
   --pidfile /run/steven_qemu.pid \
   --drive if=pflash,format=raw,readonly=on,file=$VGAPT_FIRMWARE_BIN \
@@ -100,8 +100,8 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   --mem-path /dev/hugepages \
   --nodefaults \
   --nographic \
-  --vga virtio \
-  --vnc :0 \
+  `#--vga virtio` \
+  `#--vnc :0` \
   --rtc base=localtime \
   --boot menu=on \
   --object iothread,id=io0 \
@@ -111,20 +111,23 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   --blockdev file,node-name=f1,filename=/home/coupe/L/drive.qcow2 \
   --blockdev qcow2,node-name=q1,file=f1 \
   --device virtio-blk-pci,drive=q1,iothread=io0 \
-  `#--blockdev host_device,node-name=q2,filename=/dev/nvme0n1p5` \
-  `#--device virtio-blk-pci,drive=q2,iothread=io0` \
+  --blockdev host_device,node-name=q2,filename=/dev/sda2 \
+  --device virtio-blk-pci,drive=q2,iothread=io0 \
   `#--blockdev host_device,node-name=q3,filename=/dev/nvme0n1p6` \
   `#--device virtio-blk-pci,drive=q3,iothread=io0` \
-  `#--device pcie-root-port,id=abcd,chassis=1` \
-  `#--device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on` \
-  `#--device vfio-pci,host=03:00.1,bus=abcd,addr=00.1` \
+  --device pcie-root-port,id=abcd,chassis=1 \
+  --device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
+  --device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
+  --device vfio-pci,host=03:00.2,bus=abcd,addr=00.2 \
+  --device vfio-pci,host=03:00.3,bus=abcd,addr=00.3 \
   --device qemu-xhci,id=xhci \
-  --device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc547,port=1 \
-  --device usb-host,bus=xhci.0,vendorid=0x4b42,productid=0x3738,port=2 \
+  --device usb-host,bus=xhci.0,vendorid=0x0a12,productid=0x0001,port=1 \
+  `#--device usb-host,bus=xhci.0,vendorid=0x4b42,productid=0x3738,port=2` \
   --audiodev pa,id=ad0,out.mixing-engine=off,server=unix:/run/user/1000/pulse/native \
   --device ich9-intel-hda \
   --device hda-duplex,audiodev=ad0 \
-  --device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no \
+  `#--device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no` \
+  --netdev user,id=u1 -device e1000,netdev=u1 \
   `#--nic user,model=virtio-net-pci` \
 ;
 
@@ -136,8 +139,8 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
 
 ########################################################################################
 # undo rebind GPU
-if [ "$rebind_GPU" == "yes" ]; then
-    echo "rebind_GPU: $rebind_GPU"
+if [ "$reverse_rebind_GPU" == "yes" ]; then
+    echo "reverse_rebind_GPU: $reverse_rebind_GPU"
     sudo bash /home/coupe/kvm/bind_vfio_undo.sh
 fi
 
