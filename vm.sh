@@ -31,7 +31,7 @@ set -x
 network_bridge="no"
 rebind_GPU="yes"
 amd_cpu_performance="no"
-reverse_rebind_GPU="yes"
+reverse_rebind_GPU="no"
 
 ########################################################################################
 # network bridge
@@ -86,7 +86,7 @@ sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
 # sudo taskset 0xFFF0 qemu-system-x86_64 \
 # sudo chrt -r 1 taskset -c 4-15 /home/coupe/qemu-6.1.0/build/qemu-system-x86_64 \
 # sudo chrt -r 1 taskset -c 0-11 qemu-system-x86_64 \
-qemu-system-x86_64 \
+sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="AllowedCPUs=0-15" qemu-system-x86_64 \
   --name stevenqemu,debug-threads=on \
   --pidfile /run/steven_qemu.pid \
   --drive if=pflash,format=raw,readonly=on,file=$VGAPT_FIRMWARE_BIN \

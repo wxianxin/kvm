@@ -14,6 +14,11 @@
 # sudo systemctl reset-failed
 # Good reading on how to configure systemd unit: https://www.digitalocean.com/community/tutorials/understanding-systemd-units-and-unit-files
 ########################################
+# check logs for a service
+# journalctl -u steven_qemu.service
+# delete logs
+# journalctl --flush --unit=steven_qemu.service
+########################################
 
 # pin all other system threads
 sudo systemctl set-property --runtime -- user.slice AllowedCPUs=16-19
