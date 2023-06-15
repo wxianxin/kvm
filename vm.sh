@@ -1,5 +1,5 @@
 #!/bin/bash 
-
+#
 # to run as systemd unit service(Use root account, as sudo command may timeout after long sessions):
 # systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="AllowedCPUs=0-15" /bin/bash /path/to/vm.sh
 ########################################################################################
@@ -29,7 +29,7 @@ set -x
 ########################################################################################
 # toggles
 network_bridge="no"
-rebind_GPU="yes"
+rebind_GPU="no"
 amd_cpu_performance="no"
 reverse_rebind_GPU="no"
 
@@ -108,27 +108,20 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   --blockdev file,node-name=f0,filename=/home/coupe/D/vm/win11_0.qcow2 \
   --blockdev qcow2,node-name=q0,file=f0 \
   --device virtio-blk-pci,drive=q0,iothread=io0 \
-  --blockdev file,node-name=f1,filename=/home/coupe/L/drive.qcow2 \
-  --blockdev qcow2,node-name=q1,file=f1 \
+  --blockdev host_device,node-name=q1,filename=/dev/sda2 \
   --device virtio-blk-pci,drive=q1,iothread=io0 \
-  --blockdev host_device,node-name=q2,filename=/dev/sda2 \
-  --device virtio-blk-pci,drive=q2,iothread=io0 \
-  `#--blockdev host_device,node-name=q3,filename=/dev/nvme0n1p6` \
-  `#--device virtio-blk-pci,drive=q3,iothread=io0` \
+  --drive file=/home/coupe/D/vm/virtio-win-0.1.229.iso,media=cdrom \
   --device pcie-root-port,id=abcd,chassis=1 \
   --device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
   --device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
   --device vfio-pci,host=03:00.2,bus=abcd,addr=00.2 \
   --device vfio-pci,host=03:00.3,bus=abcd,addr=00.3 \
   --device qemu-xhci,id=xhci \
-  --device usb-host,bus=xhci.0,vendorid=0x0a12,productid=0x0001,port=1 \
-  `#--device usb-host,bus=xhci.0,vendorid=0x4b42,productid=0x3738,port=2` \
-  --audiodev pa,id=ad0,out.mixing-engine=off,server=unix:/run/user/1000/pulse/native \
-  --device ich9-intel-hda \
-  --device hda-duplex,audiodev=ad0 \
+  --device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc548,port=1 \
+  --device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc547,port=2 \
+  `#--audiodev pipewire,id=ad0 --device ich9-intel-hda --device hda-duplex,audiodev=ad0 `\
   `#--device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no` \
-  --netdev user,id=u1 -device e1000,netdev=u1 \
-  `#--nic user,model=virtio-net-pci` \
+  --netdev user,id=usernet -device e1000,netdev=usernet \
 ;
 
   # --blockdev file,node-name=f1,filename=iscsi://%@192.168.50.40:3260/iqn.2022-11.stevenwang.trade:drive/0 \

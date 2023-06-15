@@ -13,8 +13,8 @@ do
     sudo bash -c "echo -n $device > /sys/bus/pci/devices/$device/driver/unbind"
 done
 
-sudo modprobe -r amdgpu
-sleep 5
+# sudo modprobe -r amdgpu
+# sleep 5
 
 # When the motherboard treat your GPU (the one that you try to assign for vm) as the primary GPU, you will have difficulties to unbind it completely, and the following 3 lines fix the issue mentioned in the link below
 # https://www.redhat.com/archives/vfio-users/2016-March/msg00088.html

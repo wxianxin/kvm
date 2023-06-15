@@ -20,10 +20,10 @@
 # journalctl --flush --unit=steven_qemu.service
 ########################################
 
-# pin all other system threads
-sudo systemctl set-property --runtime -- user.slice AllowedCPUs=16-19
-sudo systemctl set-property --runtime -- system.slice AllowedCPUs=16-19
-sudo systemctl set-property --runtime -- init.scope AllowedCPUs=16-19
+# ping all other system threads
+sudo systemctl set-property --runtime -- user.slice AllowedCPUs=14-15
+sudo systemctl set-property --runtime -- system.slice AllowedCPUs=14-15
+sudo systemctl set-property --runtime -- init.scope AllowedCPUs=14-15
 
 ########################################################################################
 # In qemu command window, get vcpu process id by executing `info cpus`
@@ -52,12 +52,12 @@ do
     if [[ $description == *"io0"* ]]
     then
         echo $description;
-        sudo taskset -cp 12-15 $pid;
+        sudo taskset -cp 12-13 $pid;
         continue;
     fi
 
     echo $description;
-    sudo taskset -cp 12-15 $pid;
+    sudo taskset -cp 12-13 $pid;
 
     echo;
 done
