@@ -1,5 +1,7 @@
 #!/bin/bash 
-#
+
+set -x
+########################################################################################
 # to run as systemd unit service(Use root account, as sudo command may timeout after long sessions):
 # systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="AllowedCPUs=0-15" /bin/bash /path/to/vm.sh
 ########################################################################################
@@ -7,8 +9,6 @@
 # how to use help:
 #   qemu-system-x86_64 -device help
 #   qemu-system-x86_64 -device pcie-root-port,help
-
-set -x
 
 ########################################################################################
 # storage IO
@@ -88,14 +88,15 @@ sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
 # sudo taskset 0xFFF0 qemu-system-x86_64 \
 # sudo chrt -r 1 taskset -c 4-15 /home/$LOGNAME/qemu-6.1.0/build/qemu-system-x86_64 \
 # sudo chrt -r 1 taskset -c 0-11 qemu-system-x86_64 \
-sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="AllowedCPUs=0-13" qemu-system-x86_64 \
-  --name stevenqemu,debug-threads=on \
+sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="AllowedCPUs=0-6,8-14" qemu-system-x86_64 \
+  --name steven_qemu,debug-threads=on \
   --pidfile /run/steven_qemu.pid \
   --drive if=pflash,format=raw,readonly=on,file=$VGAPT_FIRMWARE_BIN \
   --drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   --enable-kvm \
   --machine q35,accel=kvm,mem-merge=off \
-  --cpu host,kvm=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_reset,hv_vendor_id=1002,hv_spinlocks=0x1fff \
+  --cpu host,kvm=off,svm=off,hypervisor=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_reset,hv_vendor_id=eeag,hv_spinlocks=0x1fff \
+  `# svm=off,  # disable AMD nested hypervisor capability, avoid battleye detection` \
   --smp 12,sockets=1,cores=6,threads=2 \
   --m 16384 \
   --mem-prealloc \

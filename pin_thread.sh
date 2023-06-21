@@ -45,19 +45,20 @@ do
     then
         echo $description;
         vcpu=$(echo $description | tr -dc '0-9');
-        sudo taskset -cp $vcpu $pid;
+        # sudo taskset -cp $vcpu $pid;
+        sudo taskset -cp $((($vcpu / 2) + 8 * ($vcpu % 2))) $pid;
         continue;
     fi
 
     if [[ $description == *"io0"* ]]
     then
         echo $description;
-        sudo taskset -cp 12-13 $pid;
+        sudo taskset -cp 6,14 $pid;
         continue;
     fi
 
     echo $description;
-    sudo taskset -cp 12-13 $pid;
+    sudo taskset -cp 6,14 $pid;
 
     echo;
 done
