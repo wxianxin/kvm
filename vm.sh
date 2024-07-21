@@ -95,8 +95,11 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   --drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   --enable-kvm \
   --machine q35,accel=kvm,mem-merge=off \
-  --cpu host,kvm=off,hypervisor=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_reset,hv_vendor_id=eeag,hv_spinlocks=0x1fff \
+  --cpu host,kvm=off,hypervisor=on,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_reset,hv-tlbflush,hv-ipi,-hv-evmcs,-hv-reenlightenment,hv-stimer-direct,hv-avic,hv_vendor_id=GenuineIntel,hv_spinlocks=0x1fff,-x2apic,+pdpe1gb,+tsc-deadline,+tsc_adjust,+arch-capabilities,+rdctl-no,+skip-l1dfl-vmentry,+mds-no,+pschange-mc-no,+invtsc,+xsaves \
   `# svm=off,  # disable AMD nested hypervisor capability, avoid battleye detection` \
+  `# hv-evmcs, # intel only `\
+  -smbios type=0,vendor="AMI",version="F21",date="01/01/2024" \
+  -smbios type=1,manufacturer="GigaByte",product="AORUS MASTER",version="1.0",serial="12345678",uuid="40047947-413f-4188-93bc-c6a6e0747e9a",sku="GBZ670EAM",family="Z690 MB" \
   --smp 12,sockets=1,cores=6,threads=2 \
   --m 10240 \
   --mem-prealloc \
@@ -105,7 +108,7 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   --nographic \
   `#--vga virtio` \
   `#--vnc :0` \
-  --rtc base=localtime \
+  --rtc base=localtime,clock=host,driftfix=slew \
   --boot menu=on \
   --object iothread,id=io0 \
   --blockdev file,node-name=f0,filename=/home/$LOGNAME/D/vm/win11.qcow2 \
