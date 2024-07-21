@@ -3,6 +3,8 @@
 # set -x
 
 ########################################################################################
+# lscpu --all --extended # check CPU layout
+########################################################################################
 # systemd-cgls  # To display the whole cgroups hierarchy on your system
 # systemctl list-units --type=service --state=running
 # systemctl status --full

@@ -72,7 +72,7 @@ fi
 ########################################################################################
 
 sudo mount -t hugetlbfs hugetlbfs /dev/hugepages
-sudo sysctl vm.nr_hugepages=8200 # 2M a piece
+sudo sysctl vm.nr_hugepages=5200 # 2M a piece
 ########################################################################################
 # # Standard locations from the Ubuntu `ovmf` package
 # export VGAPT_FIRMWARE_BIN=/usr/share/OVMF/OVMF_CODE.fd
@@ -88,17 +88,17 @@ sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
 # sudo taskset 0xFFF0 qemu-system-x86_64 \
 # sudo chrt -r 1 taskset -c 4-15 /home/$LOGNAME/qemu-6.1.0/build/qemu-system-x86_64 \
 # sudo chrt -r 1 taskset -c 0-11 qemu-system-x86_64 \
-sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="AllowedCPUs=0-6,8-14" qemu-system-x86_64 \
+sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="AllowedCPUs=0-11" qemu-system-x86_64 \
   --name steven_qemu,debug-threads=on \
   --pidfile /run/steven_qemu.pid \
   --drive if=pflash,format=raw,readonly=on,file=$VGAPT_FIRMWARE_BIN \
   --drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   --enable-kvm \
   --machine q35,accel=kvm,mem-merge=off \
-  --cpu host,kvm=off,svm=off,hypervisor=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_reset,hv_vendor_id=eeag,hv_spinlocks=0x1fff \
+  --cpu host,kvm=off,hypervisor=off,topoext=on,host-cache-info=on,hv_relaxed,hv_vapic,hv_time,hv_vpindex,hv_synic,hv_stimer,hv_frequencies,hv_reset,hv_vendor_id=eeag,hv_spinlocks=0x1fff \
   `# svm=off,  # disable AMD nested hypervisor capability, avoid battleye detection` \
   --smp 12,sockets=1,cores=6,threads=2 \
-  --m 16384 \
+  --m 10240 \
   --mem-prealloc \
   --mem-path /dev/hugepages \
   --nodefaults \
@@ -108,19 +108,19 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   --rtc base=localtime \
   --boot menu=on \
   --object iothread,id=io0 \
-  --blockdev file,node-name=f0,filename=/home/$LOGNAME/D/vm/win10.qcow2 \
+  --blockdev file,node-name=f0,filename=/home/$LOGNAME/D/vm/win11.qcow2 \
   --blockdev qcow2,node-name=q0,file=f0 \
   --device virtio-blk-pci,drive=q0,iothread=io0 \
-  --blockdev host_device,node-name=q1,filename=/dev/sda2 \
+  --blockdev host_device,node-name=q1,filename=/dev/nvme0n1p3 \
   --device virtio-blk-pci,drive=q1,iothread=io0 \
   --device pcie-root-port,id=abcd,chassis=1 \
-  --device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
-  --device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
-  --device vfio-pci,host=03:00.2,bus=abcd,addr=00.2 \
-  --device vfio-pci,host=03:00.3,bus=abcd,addr=00.3 \
+  --device vfio-pci,host=01:00.0,bus=abcd,addr=00.0,multifunction=on \
+  --device vfio-pci,host=01:00.1,bus=abcd,addr=00.1 \
+  --acpitable file=/home/$LOGNAME/kvm/SSDT1.dat \
   --device qemu-xhci,id=xhci \
-  --device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc548,port=1 \
-  --device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc547,port=2 \
+  --device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc547,port=1 \
+  --device usb-host,bus=xhci.0,vendorid=0x046d,productid=0xc548,port=2 \
+  --device usb-host,bus=xhci.0,vendorid=0x1532,productid=0x0296,port=3 \
   `#--audiodev pipewire,id=ad0 --device ich9-intel-hda --device hda-duplex,audiodev=ad0 `\
   `#--device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no` \
   --netdev user,id=usernet -device e1000,netdev=usernet \
