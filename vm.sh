@@ -32,6 +32,7 @@ network_bridge="no"
 rebind_GPU="no"
 amd_cpu_performance="no"
 reverse_rebind_GPU="no"
+release_hugepage="yes"
 
 ########################################################################################
 # network bridge
@@ -148,6 +149,11 @@ fi
 if [ "$amd_cpu_performance" == "yes" ]; then
     echo "amd_cpu_performance: $amd_cpu_performance"
     sudo bash /home/$LOGNAME/kvm/set_cpu_ondemand.sh
+fi
+########################################################################################
+if [ "$release_hugepage" == "yes" ]; then
+    sudo sysctl vm.nr_hugepages=0
+    sudo umount /dev/hugepages
 fi
 ########################################################################################
 
