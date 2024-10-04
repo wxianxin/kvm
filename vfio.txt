@@ -13,6 +13,7 @@ sudo apt install ovmf
 # Fedora has them installed by default
 ########################################################################################
 # Archlinux
+sudo pacman -S qemu-desktop # qemu x86 only
 sudo pacman -S qemu-hw-usb-host
 # If using systemd-resolved, add DNS entry to /etc/resolv.conf
 #     nameserver 1.1.1.1
@@ -52,16 +53,24 @@ sudo vim /etc/default/grub
 
 sudo grub-mkconfig -o /boot/grub/grub.cfg (or sudo update-grub; or sudo update-initramfs -u)
 
-################################################
-# alternatively for blacklisting nouveau (not using kernel parameter)
-sudo bash -c "echo blacklist nouveau > /etc/modprobe.d/blacklist-nouveau.conf"
-sudo bash -c "echo options nouveau modeset=0 >> /etc/modprobe.d/blacklist-nouveau.conf"
+# Parameters like vfio-pci.ids passed via the kernel command line are only effective if the driver is built directly into the kernel (built-in), not if it's compiled as a module.
+# Not all Linux distributions support the rd.driver.pre= parameter. It is commonly supported in distributions that use Dracut for initramfs generation (like Fedora, CentOS, RHEL).
 
-################################################
-# alternatively for assigning GPU to VFIO (not using kernel parameter)
-# In order to make the graphics card available to the Windows VM, we will assign a “dummy” driver as a place holder: vfio-pci.
-VGAPT_VGA_ID=10de:2860
-VGAPT_AUDIO_ID=10de:22bd
+########################################################################################
+# Loading vfio-pci early
+
+# /etc/modprobe.d/vfio.conf
+softdep drm pre: vfio-pci
+## if nvidia proprietary driver
+softdep nvidia pre: vfio-pci
+
+# /etc/mkinitcpio.conf
+
+MODULES=(... vfio_pci vfio vfio_iommu_type1 ...)
+###############################
+# old
+VGAPT_VGA_ID=10de:2484
+VGAPT_AUDIO_ID=10de:228b
 sudo bash -c "echo options vfio-pci ids=$VGAPT_VGA_ID,$VGAPT_AUDIO_ID > /etc/modprobe.d/vfio.conf"
 sudo bash -c "echo vfio > /etc/modules-load.d/vfio.conf"
 sudo bash -c "echo vfio-pci > /etc/modules-load.d/vfio-pci.conf"
