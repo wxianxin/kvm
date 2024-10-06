@@ -77,7 +77,7 @@ fi
 sudo mount -t hugetlbfs hugetlbfs /dev/hugepages
 sudo sysctl vm.nr_hugepages=8200 # 2M a piece
 ########################################################################################
-# # Standard locations from the Ubuntu `ovmf` package
+# UEFI (OVMF)
 # export VGAPT_FIRMWARE_BIN=/usr/share/OVMF/OVMF_CODE.fd
 # export VGAPT_FIRMWARE_VARS=/usr/share/OVMF/OVMF_VARS.fd
 # Standard locations from the Archlinux `ovmf` package
@@ -85,6 +85,9 @@ export VGAPT_FIRMWARE_BIN=/usr/share/OVMF/x64/OVMF_CODE.fd
 export VGAPT_FIRMWARE_VARS=/usr/share/OVMF/x64/OVMF_VARS.fd
 # This location path is arbitrary
 export VGAPT_FIRMWARE_VARS_TMP=/tmp/OVMF_VARS.fd.tmp
+########################################################################################
+# looking glass
+bash /home/$LOGNAME/kvm/looking_glass.sh
 ########################################################################################
 
 sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
@@ -103,7 +106,6 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   --drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   --enable-kvm \
   --machine q35,accel=kvm,mem-merge=off \
-  `# --cpu host,migratable=off,kvm=off,hypervisor=off,topoext=on,host-cache-info=on,svm=off,hv_relaxed,hv_vapic,hv_vpindex,hv_synic,hv-time,hv-stimer,hv-stimer-direct,hv_frequencies,hv_reset,hv-tlbflush,hv-ipi,-hv-evmcs,-hv-reenlightenment,hv-avic,hv_vendor_id=AuthenticAMD,hv_spinlocks=0x1fff,-x2apic,+pdpe1gb,+tsc-deadline,+tsc_adjust,+arch-capabilities,+rdctl-no,+skip-l1dfl-vmentry,+mds-no,+pschange-mc-no,+invtsc,+xsaves,perfctr_core=on,clzero=on,xsaveerptr=on `\
   --cpu host,migratable=off,kvm=off,host-cache-info=on,-aes,-x2apic,+hypervisor,+topoext,+pdpe1gb,+tsc-deadline,+tsc_adjust,+arch-capabilities,+rdctl-no,+skip-l1dfl-vmentry,+mds-no,+pschange-mc-no,+invtsc,+xsaves,+perfctr_core,+clzero,+xsaveerptr,hv_relaxed,hv_vapic,hv_spinlocks=8191,hv_vpindex,hv_synic,hv_time,hv_stimer,hv_stimer_direct,hv_reset,hv_vendor_id=AuthenticAMD,hv_frequencies,hv_tlbflush,hv_ipi,hv_avic,-hv-reenlightenment,-hv-evmcs \
   `# tested benign flags --cpu +amd-stibp,+ibpb,+stibp,+virt-ssbd,+amd-ssbd,+cmp_legacy,`\
   --smbios type=0,vendor="AMI",version="F21",date="10/01/2024" \
@@ -127,12 +129,14 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   --device pcie-root-port,id=abcd,chassis=1 \
   --device vfio-pci,host=01:00.0,bus=abcd,addr=00.0,multifunction=on \
   --device vfio-pci,host=01:00.1,bus=abcd,addr=00.1 \
+  --device ivshmem-plain,memdev=ivshmem,bus=pcie.0 \
+  --object memory-backend-file,id=ivshmem,share=on,mem-path=/dev/shm/looking-glass,size=256M \
   --device qemu-xhci,id=xhci \
   --device usb-host,bus=xhci.0,vendorid=0x3151,productid=0x4011,port=1 \
   --device usb-host,bus=xhci.0,vendorid=0x373b,productid=0x101a,port=2 \
   --audiodev pipewire,id=ad0 --device ich9-intel-hda --device hda-duplex,audiodev=ad0 \
-  `#--device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no` \
   --netdev user,id=usernet -device e1000,netdev=usernet \
+  `#--device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no` \
 ;
 
   # --blockdev file,node-name=f1,filename=iscsi://%@192.168.50.40:3260/iqn.2022-11.stevenwang.trade:drive/0 \
