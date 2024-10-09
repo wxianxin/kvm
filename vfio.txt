@@ -67,6 +67,8 @@ softdep nvidia pre: vfio-pci
 # /etc/mkinitcpio.conf
 
 MODULES=(... vfio_pci vfio vfio_iommu_type1 ...)
+
+sudo mkinitcpio -P
 ###############################
 # old
 VGAPT_VGA_ID=10de:2484
