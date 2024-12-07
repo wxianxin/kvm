@@ -81,10 +81,10 @@ sudo sysctl vm.nr_hugepages=8200 # 2M a piece
 # export VGAPT_FIRMWARE_BIN=/usr/share/OVMF/OVMF_CODE.fd
 # export VGAPT_FIRMWARE_VARS=/usr/share/OVMF/OVMF_VARS.fd
 # Standard locations from the Archlinux `ovmf` package
-export VGAPT_FIRMWARE_BIN=/usr/share/OVMF/x64/OVMF_CODE.fd
-export VGAPT_FIRMWARE_VARS=/usr/share/OVMF/x64/OVMF_VARS.fd
+export VGAPT_FIRMWARE_BIN=/usr/share/OVMF/x64/OVMF_CODE.4m.fd
+export VGAPT_FIRMWARE_VARS=/usr/share/OVMF/x64/OVMF_VARS.4m.fd
 # This location path is arbitrary
-export VGAPT_FIRMWARE_VARS_TMP=/tmp/OVMF_VARS.fd.tmp
+export VGAPT_FIRMWARE_VARS_TMP=/tmp/OVMF_VARS.4m.fd.tmp
 ########################################################################################
 # looking glass
 bash /home/$LOGNAME/kvm/looking_glass.sh
@@ -134,9 +134,10 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   --device ivshmem-plain,id=shmem0,memdev=looking-glass \
   --object memory-backend-file,id=looking-glass,mem-path=/dev/kvmfr0,size=256M,share=yes \
   --device qemu-xhci,id=xhci \
-  --device usb-host,bus=xhci.0,vendorid=0x3151,productid=0x4015,port=1 \
+  --device usb-host,bus=xhci.0,vendorid=0x3151,productid=0x4011,port=1 \
   --device usb-host,bus=xhci.0,vendorid=0x373b,productid=0x101a,port=2 \
   --device usb-host,bus=xhci.0,vendorid=0x1462,productid=0x3fa4,port=3 \
+  --device usb-host,bus=xhci.0,vendorid=0x1915,productid=0x0723,port=4 \
   --audiodev pipewire,id=ad0 --device ich9-intel-hda --device hda-duplex,audiodev=ad0 \
   --netdev user,id=usernet -device e1000,netdev=usernet \
   `#--device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no` \

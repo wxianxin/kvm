@@ -36,7 +36,7 @@ sh list_iommu_group.sh
 ########################################################################################
 # CPU isolation
 ## Very good guide: https://www.suse.com/c/cpu-isolation-practical-example-part-5/
-## No need to pass the “rcu_nocbs=” kernel parameter as that is automatically taken care of while passing the “nohz_full=” parameter.
+## ? No need to pass the “rcu_nocbs=” kernel parameter as that is automatically taken care of while passing the “nohz_full=” parameter.
 ## Using 'isolcpus=' is not advised because the isolation configuration can’t be later changed on runtime. This is why “isolcpus” tends to be considered as “deprecated” despite it being still in use. It may remain useful with specialized or embedded kernels that haven’t been built with cpusets/cgroups support. 
 ## At a lower level, it is also possible to affine each individual task to the desired set of CPUs using tools like taskset or relying on APIs like sched_setaffinity().  On a setup without cpusets support, it has the advantage to allow for affinity change on runtime, unlike what “isolcpus” does. The drawback is that it requires more finegrained work.
 
@@ -57,7 +57,6 @@ sudo grub-mkconfig -o /boot/grub/grub.cfg (or sudo update-grub; or sudo update-i
 # Not all Linux distributions support the rd.driver.pre= parameter. It is commonly supported in distributions that use Dracut for initramfs generation (like Fedora, CentOS, RHEL).
 
 ########################################################################################
-# NVIDIA: To dynamically bind/unbind NVIDIA driver -> ALWAYS boot with VFIO first, then bind to NVIDIA driver if necessary
 # Loading vfio-pci early
 
 # /etc/modprobe.d/vfio.conf
@@ -65,6 +64,7 @@ softdep drm pre: vfio-pci
 ## if nvidia proprietary driver
 softdep nvidia pre: vfio-pci
 
+# NVIDIA: To dynamically bind/unbind NVIDIA driver -> ALWAYS boot with VFIO first, then bind to NVIDIA driver if necessary
 # /etc/mkinitcpio.conf
 
 MODULES=(... vfio_pci vfio vfio_iommu_type1 ...)
