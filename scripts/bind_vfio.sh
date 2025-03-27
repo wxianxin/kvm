@@ -7,7 +7,7 @@ set -x
 # # Kill wayland display manager
 # sudo systemctl stop display-manager.service
 
-for device in $(lspci | grep -e 73a6 -e 'Navi 2' | awk '{print "0000:"$1}')
+for device in $(lspci | grep -e 7444 -e 'Navi 31' | awk '{print "0000:"$1}')
 do
     echo "$device"
     sudo bash -c "echo -n $device > /sys/bus/pci/devices/$device/driver/unbind"
@@ -26,10 +26,10 @@ sudo modprobe vfio
 sudo modprobe vfio-pci
 sudo modprobe vfio_iommu_type1
 
-sudo bash -c "echo 1002 73bf > /sys/bus/pci/drivers/vfio-pci/new_id"
-sudo bash -c "echo 1002 ab28 > /sys/bus/pci/drivers/vfio-pci/new_id"
-sudo bash -c "echo 1002 73a6 > /sys/bus/pci/drivers/vfio-pci/new_id"
-sudo bash -c "echo 1002 73a4 > /sys/bus/pci/drivers/vfio-pci/new_id"
+sudo bash -c "echo 1002 744c > /sys/bus/pci/drivers/vfio-pci/new_id"
+sudo bash -c "echo 1002 ab30 > /sys/bus/pci/drivers/vfio-pci/new_id"
+sudo bash -c "echo 1002 7446 > /sys/bus/pci/drivers/vfio-pci/new_id"
+sudo bash -c "echo 1002 7444 > /sys/bus/pci/drivers/vfio-pci/new_id"
 
 echo "---- Steven ---- GPU rebound to vfio-pci ----"
 

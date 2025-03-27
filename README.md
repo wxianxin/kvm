@@ -14,7 +14,6 @@ sudo apt install ovmf
 ########################################################################################
 # Archlinux
 sudo pacman -S qemu-desktop # qemu x86 only
-sudo pacman -S qemu-hw-usb-host
 # If using systemd-resolved, add DNS entry to /etc/resolv.conf
 #     nameserver 1.1.1.1
 ########################################################################################
@@ -49,7 +48,7 @@ sudo vim /etc/default/grub
 ########
 sudo vim /etc/default/grub
     GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_iommu=on iommu=pt isolcpus=4-15 nohz_full=4-15 rcu_nocbs=4-15 module_blacklist=nouveau nouveau.modeset=0 vfio-pci.ids=10de:249d,10de:228b"
-    GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_iommu=on iommu=pt isolcpus=2-5,8-11 nohz_full=2-5,8-11 rcu_nocbs=2-5,8-11 kvm.ignore_msrs=1 module.blacklist=amdgpu vfio-pci.ids=1002:73df,1002:ab28"
+    GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_iommu=on iommu=pt isolcpus=0-7,16-23 nohz_full=0-7,16-23 rcu_nocbs=0-7,16-23 kvm.ignore_msrs=1 module.blacklist=amdgpu vfio-pci.ids=1002:744c,1002:ab30"
 
 sudo grub-mkconfig -o /boot/grub/grub.cfg (or sudo update-grub; or sudo update-initramfs -u)
 

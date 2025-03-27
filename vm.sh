@@ -95,7 +95,7 @@ sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
 # sudo chrt -r 1 taskset -c 4-15 /home/$LOGNAME/qemu-6.1.0/build/qemu-system-x86_64 \
 # sudo chrt -r 1 taskset -c 0-11 qemu-system-x86_64 \
 # here for CPU core count, use desired core count + IO + worker thread. eg. 6*2(guest) + 2(IO) + 2(worker) = 16
-sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="AllowedCPUs=0-6,8-14" \
+sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="AllowedCPUs=0-9,16-25" \
   `#--setenv=XDG_RUNTIME_DIR=/run/user/1000 `\
   --setenv=PIPEWIRE_RUNTIME_DIR=/run/user/1000 \
   `#--setenv=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus `\
@@ -110,7 +110,7 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   `# tested benign flags --cpu +amd-stibp,+ibpb,+stibp,+virt-ssbd,+amd-ssbd,+cmp_legacy,`\
   --smbios type=0,vendor="AMI",version="F21",date="10/01/2024" \
   --smbios type=1,manufacturer="Asus",product="STRIX",version="1.0",serial="12345678",uuid="40047947-413f-4188-93bc-c6a6e0747e9a",sku="B650EI",family="B650E MB" \
-  --smp 12,sockets=1,cores=6,threads=2 \
+  --smp 16,sockets=1,cores=8,threads=2 \
   --m 16384 \
   --mem-prealloc \
   --mem-path /dev/hugepages \
@@ -120,15 +120,19 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   `#--vnc :0` \
   --rtc base=localtime,clock=host,driftfix=slew \
   --boot menu=on \
+  `#--drive file=/home/$LOGNAME/Downloads/Win11_24H2_EnglishInternational_x64.iso,media=cdrom` \
+  `#--drive file=/home/$LOGNAME/Downloads/virtio-win-0.1.266.iso,media=cdrom` \
   --object iothread,id=io0 \
-  --blockdev file,node-name=f0,filename=/home/$LOGNAME/vm/zen5_win10.qcow2 \
+  --blockdev file,node-name=f0,filename=/home/$LOGNAME/vm/win11.qcow2 \
   --blockdev qcow2,node-name=q0,file=f0 \
   --device virtio-blk-pci,drive=q0,iothread=io0 \
   --blockdev host_device,node-name=q1,filename=/dev/nvme0n1p6 \
   --device virtio-blk-pci,drive=q1,iothread=io0 \
   --device pcie-root-port,id=abcd,chassis=1 \
-  --device vfio-pci,host=01:00.0,bus=abcd,addr=00.0,multifunction=on \
-  --device vfio-pci,host=01:00.1,bus=abcd,addr=00.1 \
+  --device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
+  --device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
+  --device vfio-pci,host=03:00.2,bus=abcd,addr=00.2 \
+  --device vfio-pci,host=03:00.3,bus=abcd,addr=00.3 \
   `# --device ivshmem-plain,memdev=ivshmem,bus=pcie.0` \
   `# --object memory-backend-file,id=ivshmem,share=on,mem-path=/dev/shm/looking-glass,size=256M` \
   --device ivshmem-plain,id=shmem0,memdev=looking-glass \
@@ -136,8 +140,7 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   --device qemu-xhci,id=xhci \
   --device usb-host,bus=xhci.0,vendorid=0x3151,productid=0x4011,port=1 \
   --device usb-host,bus=xhci.0,vendorid=0x373b,productid=0x101a,port=2 \
-  --device usb-host,bus=xhci.0,vendorid=0x1462,productid=0x3fa4,port=3 \
-  --device usb-host,bus=xhci.0,vendorid=0x1915,productid=0x0723,port=4 \
+  `#--device usb-host,bus=xhci.0,vendorid=0x1462,productid=0x3fa4,port=3` \
   --audiodev pipewire,id=ad0 --device ich9-intel-hda --device hda-duplex,audiodev=ad0 \
   --netdev user,id=usernet -device e1000,netdev=usernet \
   `#--device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no` \
@@ -177,8 +180,6 @@ fi
 # --device vfio-pci,host=01:00.0,romfile=/home/$LOGNAME/D/vm/TU106.rom \
 # --drive if=none,id=disk0,cache=none,aio=threads,format=qcow2,file=/home/$LOGNAME/vm/win11.qcow2 \
 # --drive if=none,id=disk1,cache=none,aio=threads,format=raw,file=/dev/nvme0n1p5 \
-# --drive file=/home/$LOGNAME/Downloads/Win10_22H2_English_x64v1.iso,media=cdrom \
-# --drive file=/home/$LOGNAME/bkp/x/iso_archive/windows/virtio-win-0.1.262.iso,media=cdrom \
 # --acpitable file=/home/$LOGNAME/kvm/SSDT1.dat \
 # --usb -device usb-host,hostbus=1,hostaddr=7 \ # legacy USB passthrough(usb1.1/2.0)
 
