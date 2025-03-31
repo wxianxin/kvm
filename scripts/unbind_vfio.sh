@@ -3,7 +3,7 @@
 
 set -x
 
-for device in $(lspci | grep -e 73a6 -e 'Navi 2' | awk '{print "0000:"$1}')
+for device in $(lspci | grep -e 7444 -e 'Navi 31' | awk '{print "0000:"$1}')
 do
     echo "$device"
     sudo bash -c "echo -n $device > /sys/bus/pci/devices/$device/driver/unbind"

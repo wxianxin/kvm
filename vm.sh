@@ -16,7 +16,7 @@ set -x
 # iscsi dependency
 # pacman -S qemu-block-iscsi
 
-# qemu-img create -f qcow2 ~/D/vm/win11.qcow2 64G
+# qemu-img create -f qcow2 ~/vm/w10.qcow2 64G
 # qemu-img create -f qcow2 -o backing_file=/path/to/base/image.qcow2,backing_fmt=qcow2 /path/to/snapshot/image.qcow2
 # qemu-system-x86_64 -drive file=/path/to/snapshot/image.qcow2,if=virtio
 
@@ -29,7 +29,7 @@ set -x
 ########################################################################################
 # toggles
 network_bridge="no"
-rebind_GPU="no"
+rebind_GPU="yes"
 amd_cpu_performance="no"
 reverse_rebind_GPU="no"
 pin_cpu="yes"
@@ -52,19 +52,23 @@ if [ "$network_bridge" == "yes" ]; then
     sudo ip link set tap0 up
     sudo dhclient br0
 fi
-
 ########################################################################################
 # mount the storage. NOTE: this has to be after the network bridge setup.
-sudo mount /dev/nvme0n1p2 /home/$LOGNAME/vm
+# sudo mount /dev/nvme0n1p2 /home/$LOGNAME/vm
 # bash /home/$LOGNAME/config/fc.sh
-# sudo mount -o rsize=32768,wsize=32768 192.168.8.99:/mnt/vault/clustervault ~/nfs
+sudo mount -o rsize=32768,wsize=32768 192.168.8.99:/mnt/vault/clustervault ~/nfs
 # sudo mount -t cifs -o username=guest,uid=coupe,vers=2.0 "//192.168.8.1/Seagate_BUP_BK(08E5)"  ~/bkp
 ########################################################################################
 # rebind GPU
 if [ "$rebind_GPU" == "yes" ]; then
-    echo "rebind_GPU: $rebind_GPU"
-    sudo bash /home/$LOGNAME/kvm/bind_vfio.sh
-    sleep 5
+    if lspci -knn | grep -q vfio; then
+        echo "GPU already binded to VFIO !!!"
+    else
+        echo "rebind_GPU: $rebind_GPU"
+        sudo bash /home/$LOGNAME/kvm/scripts/bind_vfio.sh
+        sleep 5
+    fi
+
 fi
 ########################################################################################
 # set AMD CPU to performance mode
@@ -120,21 +124,19 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   `#--vnc :0` \
   --rtc base=localtime,clock=host,driftfix=slew \
   --boot menu=on \
-  `#--drive file=/home/$LOGNAME/Downloads/Win11_24H2_EnglishInternational_x64.iso,media=cdrom` \
-  `#--drive file=/home/$LOGNAME/Downloads/virtio-win-0.1.266.iso,media=cdrom` \
+  --drive file=/home/$LOGNAME/nfs/vm/en-us_windows_10_enterprise_ltsc_2021_x64_dvd_d289cf96.iso,media=cdrom \
+  --drive file=/home/$LOGNAME/nfs/vm/virtio-win-0.1.266.iso,media=cdrom \
   --object iothread,id=io0 \
-  --blockdev file,node-name=f0,filename=/home/$LOGNAME/vm/win11.qcow2 \
+  --blockdev file,node-name=f0,filename=/home/$LOGNAME/vm/w10.qcow2 \
   --blockdev qcow2,node-name=q0,file=f0 \
   --device virtio-blk-pci,drive=q0,iothread=io0 \
-  --blockdev host_device,node-name=q1,filename=/dev/nvme0n1p6 \
+  --blockdev host_device,node-name=q1,filename=/dev/nvme0n1p4 \
   --device virtio-blk-pci,drive=q1,iothread=io0 \
   --device pcie-root-port,id=abcd,chassis=1 \
-  --device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
+  --device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on,romfile=/home/$LOGNAME/kvm/scripts/dummy.rom \
   --device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
   --device vfio-pci,host=03:00.2,bus=abcd,addr=00.2 \
   --device vfio-pci,host=03:00.3,bus=abcd,addr=00.3 \
-  `# --device ivshmem-plain,memdev=ivshmem,bus=pcie.0` \
-  `# --object memory-backend-file,id=ivshmem,share=on,mem-path=/dev/shm/looking-glass,size=256M` \
   --device ivshmem-plain,id=shmem0,memdev=looking-glass \
   --object memory-backend-file,id=looking-glass,mem-path=/dev/kvmfr0,size=256M,share=yes \
   --device qemu-xhci,id=xhci \
@@ -143,7 +145,7 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   `#--device usb-host,bus=xhci.0,vendorid=0x1462,productid=0x3fa4,port=3` \
   --audiodev pipewire,id=ad0 --device ich9-intel-hda --device hda-duplex,audiodev=ad0 \
   --netdev user,id=usernet -device e1000,netdev=usernet \
-  `#--device virtio-net,netdev=network0 -netdev tap,id=network0,ifname=tap0,script=no,downscript=no` \
+  `#--device virtio-net,netdev=net0 -netdev tap,id=net0,ifname=tap0,script=no,downscript=no` \
 ;
 
   # --blockdev file,node-name=f1,filename=iscsi://%@192.168.50.40:3260/iqn.2022-11.stevenwang.trade:drive/0 \
