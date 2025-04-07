@@ -26,6 +26,11 @@ set -x
 ## You can also try add compression (-c) to the output image:
 # qemu-img convert -c -O qcow2 source.qcow2 shrunk.qcow2
 
+# mount qcow2 on host
+# sudo modprobe nbd max_part=8
+# sudo qemu-nbd --connect=/dev/nbd0 /home/$LOGNAME/vm/share.qcow2
+# sudo mount -t ntfs3 /dev/nbd0p2 bkp
+
 ########################################################################################
 # toggles
 network_bridge="no"
@@ -124,28 +129,34 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   `#--vnc :0` \
   --rtc base=localtime,clock=host,driftfix=slew \
   --boot menu=on \
-  --drive file=/home/$LOGNAME/nfs/vm/en-us_windows_10_enterprise_ltsc_2021_x64_dvd_d289cf96.iso,media=cdrom \
-  --drive file=/home/$LOGNAME/nfs/vm/virtio-win-0.1.266.iso,media=cdrom \
+  `#--drive file=/home/$LOGNAME/nfs/vm/en-us_windows_11_iot_enterprise_ltsc_2024_x64_dvd_f6b14814.iso,media=cdrom` \
+  `#--drive file=/home/$LOGNAME/nfs/vm/virtio-win-0.1.266.iso,media=cdrom` \
   --object iothread,id=io0 \
-  --blockdev file,node-name=f0,filename=/home/$LOGNAME/vm/w10.qcow2 \
+  --blockdev file,node-name=f0,filename=/home/$LOGNAME/vm/w11i.qcow2 \
   --blockdev qcow2,node-name=q0,file=f0 \
   --device virtio-blk-pci,drive=q0,iothread=io0 \
   --blockdev host_device,node-name=q1,filename=/dev/nvme0n1p4 \
   --device virtio-blk-pci,drive=q1,iothread=io0 \
+  --blockdev file,node-name=f1,filename=/home/$LOGNAME/vm/share.qcow2 \
+  --blockdev qcow2,node-name=q2,file=f1 \
+  --device virtio-blk-pci,drive=q2,iothread=io0 \
   --device pcie-root-port,id=abcd,chassis=1 \
   --device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on,romfile=/home/$LOGNAME/kvm/scripts/dummy.rom \
   --device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
   --device vfio-pci,host=03:00.2,bus=abcd,addr=00.2 \
   --device vfio-pci,host=03:00.3,bus=abcd,addr=00.3 \
-  --device ivshmem-plain,id=shmem0,memdev=looking-glass \
-  --object memory-backend-file,id=looking-glass,mem-path=/dev/kvmfr0,size=256M,share=yes \
-  --device qemu-xhci,id=xhci \
-  --device usb-host,bus=xhci.0,vendorid=0x3151,productid=0x4011,port=1 \
-  --device usb-host,bus=xhci.0,vendorid=0x373b,productid=0x101a,port=2 \
-  `#--device usb-host,bus=xhci.0,vendorid=0x1462,productid=0x3fa4,port=3` \
   --audiodev pipewire,id=ad0 --device ich9-intel-hda --device hda-duplex,audiodev=ad0 \
   --netdev user,id=usernet -device e1000,netdev=usernet \
   `#--device virtio-net,netdev=net0 -netdev tap,id=net0,ifname=tap0,script=no,downscript=no` \
+  --device ivshmem-plain,id=shmem0,memdev=looking-glass \
+  --object memory-backend-file,id=looking-glass,mem-path=/dev/kvmfr0,size=256M,share=yes \
+  --spice port=5900,addr=127.0.0.1,disable-ticketing \
+  --device virtio-keyboard-pci \
+  --device virtio-mouse-pci \
+  --device qemu-xhci,id=xhci \
+  `#--device usb-host,bus=xhci.0,vendorid=0x3151,productid=0x4011,port=1` \
+  `#--device usb-host,bus=xhci.0,vendorid=0x373b,productid=0x101a,port=2` \
+  `#--device usb-host,bus=xhci.0,vendorid=0x1462,productid=0x3fa4,port=3` \
 ;
 
   # --blockdev file,node-name=f1,filename=iscsi://%@192.168.50.40:3260/iqn.2022-11.stevenwang.trade:drive/0 \

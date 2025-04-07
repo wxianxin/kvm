@@ -25,7 +25,9 @@ bind_vfio() {
         sudo sh -c "echo '$dev' > /sys/bus/pci/devices/$dev/driver/unbind"
     done
 
-    sudo modprobe vfio vfio-pci vfio_iommu_type1
+    sudo modprobe vfio
+    sudo modprobe vfio-pci
+    sudo modprobe vfio_iommu_type1
 
     sudo sh -c "echo 0 > /sys/class/vtconsole/vtcon0/bind"
     sudo sh -c "echo 0 > /sys/class/vtconsole/vtcon1/bind"
