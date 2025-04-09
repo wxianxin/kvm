@@ -36,9 +36,13 @@ set -x
 network_bridge="no"
 rebind_GPU="yes"
 amd_cpu_performance="no"
-reverse_rebind_GPU="no"
+reverse_rebind_GPU="no" # if systemd, then reverse would be too early
 pin_cpu="yes"
 release_hugepage="no" # if systemd, then release would be too early
+
+########################################################################################
+# Source VFIO functions
+source /home/$LOGNAME/kvm/scripts/bind_vfio.sh
 
 ########################################################################################
 # network bridge
@@ -70,7 +74,7 @@ if [ "$rebind_GPU" == "yes" ]; then
         echo "GPU already binded to VFIO !!!"
     else
         echo "rebind_GPU: $rebind_GPU"
-        sudo bash /home/$LOGNAME/kvm/scripts/bind_vfio.sh
+        bind_vfio
         sleep 5
     fi
 
@@ -169,7 +173,7 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
 # undo rebind GPU
 if [ "$reverse_rebind_GPU" == "yes" ]; then
     echo "reverse_rebind_GPU: $reverse_rebind_GPU"
-    sudo bash /home/$LOGNAME/kvm/bind_vfio_undo.sh
+    unbind_vfio
 fi
 ########################################################################################
 # set AMD CPU back to ondemand mode
