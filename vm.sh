@@ -33,11 +33,11 @@ set -x
 
 ########################################################################################
 # toggles
-network_bridge="no"
-rebind_GPU="yes"
-amd_cpu_performance="no"
-reverse_rebind_GPU="no" # if systemd, then reverse would be too early
 pin_cpu="yes"
+rebind_GPU="yes"
+network_bridge="no"
+set_cpu_performance="yes"
+reverse_rebind_GPU="no" # if systemd, then reverse would be too early
 release_hugepage="no" # if systemd, then release would be too early
 
 ########################################################################################
@@ -75,15 +75,15 @@ if [ "$rebind_GPU" == "yes" ]; then
     else
         echo "rebind_GPU: $rebind_GPU"
         bind_vfio
-        sleep 5
+        sleep 3
     fi
 
 fi
 ########################################################################################
-# set AMD CPU to performance mode
-if [ "$amd_cpu_performance" == "yes" ]; then
-    echo "amd_cpu_performance: $amd_cpu_performance"
-    sudo bash /home/$LOGNAME/kvm/set_cpu_performance.sh
+# set CPU performance
+if [ "$set_cpu_performance" == "yes" ]; then
+    echo "set_cpu_performance: $set_cpu_performance"
+    sudo bash /home/$LOGNAME/kvm/scripts/set_cpu_performance.sh
 fi
 
 ########################################################################################
@@ -176,14 +176,14 @@ if [ "$reverse_rebind_GPU" == "yes" ]; then
     unbind_vfio
 fi
 ########################################################################################
-# set AMD CPU back to ondemand mode
-if [ "$amd_cpu_performance" == "yes" ]; then
-    echo "amd_cpu_performance: $amd_cpu_performance"
+# set CPU performance back
+if [ "$set_cpu_performance" == "yes" ]; then
+    echo "set_cpu_performance: $set_cpu_performance"
     sudo bash /home/$LOGNAME/kvm/set_cpu_ondemand.sh
 fi
 ########################################################################################
 if [ "$pin_cpu" == "yes" ]; then
-    sleep 10
+    sleep 8
     bash /home/$LOGNAME/kvm/pin_thread.sh
 fi
 ########################################################################################
