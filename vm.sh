@@ -30,6 +30,8 @@ set -x
 # sudo modprobe nbd max_part=8
 # sudo qemu-nbd --connect=/dev/nbd0 /home/$LOGNAME/vm/share.qcow2
 # sudo mount -t ntfs3 /dev/nbd0p2 bkp
+# # undo
+# sudo qemu-nbd --disconnect /dev/nbd0
 
 ########################################################################################
 # toggles
@@ -178,8 +180,7 @@ fi
 ########################################################################################
 # set CPU performance back
 if [ "$set_cpu_performance" == "yes" ]; then
-    echo "set_cpu_performance: $set_cpu_performance"
-    sudo bash /home/$LOGNAME/kvm/set_cpu_ondemand.sh
+    echo "Do nothing: set_cpu_performance: $set_cpu_performance"
 fi
 ########################################################################################
 if [ "$pin_cpu" == "yes" ]; then

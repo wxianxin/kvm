@@ -17,7 +17,7 @@ set_cpu_hp() {
   done
 }
 
-set_cpu_hp() {
+set_cpu_maxp() {
   for c in {0..31}; do
     default_max=$(cat /sys/devices/system/cpu/cpu${c}/cpufreq/cpuinfo_max_freq)
     echo "$default_max" | sudo tee /sys/devices/system/cpu/cpu${c}/cpufreq/scaling_max_freq

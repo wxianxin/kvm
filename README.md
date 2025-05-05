@@ -58,6 +58,9 @@ sudo grub-mkconfig -o /boot/grub/grub.cfg (or sudo update-grub; or sudo update-i
 ########################################################################################
 # Loading vfio-pci early
 
+# AMD reset bug
+# when dummy GPU rom doesn't work, power cycle twice: power off -> power on -> power off(no GPU VFIO) -> GPU VFIO
+
 # /etc/modprobe.d/vfio.conf
 softdep drm pre: vfio-pci
 ## if nvidia proprietary driver
