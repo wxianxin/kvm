@@ -26,5 +26,3 @@ set_cpu_maxp() {
   done
 }
 
-set_cpu_lp
-# set_cpu_hp

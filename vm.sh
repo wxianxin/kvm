@@ -39,12 +39,11 @@ pin_cpu="yes"
 rebind_GPU="yes"
 network_bridge="no"
 set_cpu_performance="yes"
-reverse_rebind_GPU="no" # if systemd, then reverse would be too early
-release_hugepage="no" # if systemd, then release would be too early
 
 ########################################################################################
 # Source VFIO functions
 source /home/$LOGNAME/kvm/scripts/bind_vfio.sh
+source /home/$LOGNAME/kvm/scripts/set_cpu_performance.sh
 
 ########################################################################################
 # network bridge
@@ -85,7 +84,7 @@ fi
 # set CPU performance
 if [ "$set_cpu_performance" == "yes" ]; then
     echo "set_cpu_performance: $set_cpu_performance"
-    sudo bash /home/$LOGNAME/kvm/scripts/set_cpu_performance.sh
+    set_cpu_lp
 fi
 
 ########################################################################################
@@ -172,25 +171,9 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
 #   --drive file=iscsi://%@192.168.50.40:3260/iqn.2022-11.stevenwang.trade:drive/0,format=raw,if=none,id=iscsidrive,cache=none \
 
 ########################################################################################
-# undo rebind GPU
-if [ "$reverse_rebind_GPU" == "yes" ]; then
-    echo "reverse_rebind_GPU: $reverse_rebind_GPU"
-    unbind_vfio
-fi
-########################################################################################
-# set CPU performance back
-if [ "$set_cpu_performance" == "yes" ]; then
-    echo "Do nothing: set_cpu_performance: $set_cpu_performance"
-fi
-########################################################################################
 if [ "$pin_cpu" == "yes" ]; then
     sleep 8
     bash /home/$LOGNAME/kvm/pin_thread.sh
-fi
-########################################################################################
-if [ "$release_hugepage" == "yes" ]; then
-    sudo sysctl vm.nr_hugepages=0
-    sudo umount /dev/hugepages
 fi
 ########################################################################################
 
