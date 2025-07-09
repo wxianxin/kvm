@@ -66,6 +66,13 @@ softdep drm pre: vfio-pci
 ## if nvidia proprietary driver
 softdep nvidia pre: vfio-pci
 
+# e.g.
+options vfio-pci ids=1002:744c,1002:ab30,1002:7446,1002:7444 disable_vga=1
+softdep drm pre: vfio-pci
+softdep nvidia pre: vfio-pci
+softdep amdgpu pre: vfio-pci
+softdep snd_hda_intel pre: vfio-pci
+
 # NVIDIA: To dynamically bind/unbind NVIDIA driver -> ALWAYS boot with VFIO first, then bind to NVIDIA driver if necessary
 # /etc/mkinitcpio.conf
 

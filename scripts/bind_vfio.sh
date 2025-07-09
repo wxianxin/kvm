@@ -7,59 +7,83 @@
 # # Kill wayland display manager
 # sudo systemctl stop display-manager.service
 
+#!/bin/bash
+
 pci_devices=(
-    "0000:03:00.0"  # GPU
-    "0000:03:00.1"  # Audio
+    # "0000:03:00.0"  # GPU
+    # "0000:03:00.1"  # Audio
     "0000:03:00.2"  # USB
-    "0000:03:00.3"  # Serial
+    "0000:03:00.3"  # Serial (i2c)
 )
 
-# Get vendor and device IDs for all devices
-vd_ids=()
+# Preload vendor/device IDs
+declare -A vd_ids
 for dev in "${pci_devices[@]}"; do
-    vd_ids+=("$(cat /sys/bus/pci/devices/$dev/vendor) $(cat /sys/bus/pci/devices/$dev/device)")
+    vd_ids[$dev]="$(cat /sys/bus/pci/devices/$dev/vendor) $(cat /sys/bus/pci/devices/$dev/device)"
 done
 
-bind_vfio() {
-    # Unbind devices from current driver
-    for dev in "${pci_devices[@]}"; do
-        sudo sh -c "echo '$dev' > /sys/bus/pci/devices/$dev/driver/unbind"
+unbind_consoles() {
+    for vt in /sys/class/vtconsole/vtcon*; do
+        [ -e "$vt" ] || continue
+        name="$(< "$vt/name")"
+        if grep -qi "frame buffer" <<< "$name"; then
+            echo "Unbinding $vt ($name)"
+            echo 0 | sudo tee "$vt/bind"
+        fi
     done
+    # sudo sh -c "echo efi-framebuffer.0 > /sys/bus/platform/drivers/efi-framebuffer/unbind"
+}
+
+bind_vfio() {
 
     # Load required modules
     sudo modprobe vfio
     sudo modprobe vfio-pci
     sudo modprobe vfio_iommu_type1
 
-    # Disable virtual consoles
-    sudo sh -c "echo 0 > /sys/class/vtconsole/vtcon0/bind"
-    sudo sh -c "echo 0 > /sys/class/vtconsole/vtcon1/bind"
-    # sudo sh -c "echo efi-framebuffer.0 > /sys/bus/platform/drivers/efi-framebuffer/unbind"
+    # Unbind host drivers, add to Vfio and bind
+    for dev in "${pci_devices[@]}"; do
+        echo "Unbinding $dev (${vd_ids[$dev]})"
+        sudo sh -c "echo '$dev' > /sys/bus/pci/devices/$dev/driver/unbind"
+    done
 
-    # Bind all devices to vfio-pci
-    for vd in "${vd_ids[@]}"; do
-        sudo sh -c "echo '$vd' > /sys/bus/pci/drivers/vfio-pci/new_id"
+    unbind_consoles
+
+    for dev in "${pci_devices[@]}"; do
+        echo "Binding vfio $dev (${vd_ids[$dev]})"
+        sudo sh -c "echo '${vd_ids[$dev]}' > /sys/bus/pci/drivers/vfio-pci/new_id"
+        sudo sh -c "echo '$dev' > /sys/bus/pci/drivers/vfio-pci/bind"
+        sudo sh -c "echo vfio-pci > /sys/bus/pci/devices/$dev/driver_override"
     done
 
     echo "---- Steven ---- All devices rebound to vfio-pci ----"
 }
 
 unbind_vfio() {
-    # Remove vendor/device IDs from vfio-pci
-    for vd in "${vd_ids[@]}"; do
-        sudo sh -c "echo '$vd' > /sys/bus/pci/drivers/vfio-pci/remove_id"
-    done
 
-    # Remove devices from the PCI bus
+    # Remove vendor/device IDs from vfio-pci # usually not necessary 
+    # for vd in "${vd_ids[@]}"; do
+    #     sudo sh -c "echo '$vd' > /sys/bus/pci/drivers/vfio-pci/remove_id"
+    # done 
+
     for dev in "${pci_devices[@]}"; do
-        sudo sh -c "echo 1 > /sys/bus/pci/devices/$dev/remove"
+        echo "Releasing $dev"
+        sudo sh -c "echo '$dev' > /sys/bus/pci/devices/$dev/driver/unbind"
+        # Remove devices from the PCI bus # Too strong, harder to attach
+        # sudo sh -c "echo 1 > /sys/bus/pci/devices/$dev/remove"
     done
 
     # Rescan the PCI bus to rediscover devices
     sudo sh -c "echo 1 > /sys/bus/pci/rescan"
-    
     echo "---- Steven ---- All devices unbound from vfio-pci ----"
 }
+
+case "$1" in
+    bind)   bind_vfio ;;
+    unbind) unbind_vfio ;;
+    *)      echo "Usage: $0 {bind|unbind}" ;;
+esac
+
 
 # bind_vfio
 # unbind_vfio

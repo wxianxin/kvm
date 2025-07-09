@@ -88,7 +88,8 @@ if [ "$set_cpu_performance" == "yes" ]; then
 fi
 
 ########################################################################################
-sudo mount -t hugetlbfs hugetlbfs /dev/hugepages
+echo 1 | sudo tee /proc/sys/vm/compact_memory   # defragment RAM
+sudo mount -t hugetlbfs nodev /dev/hugepages
 sudo sysctl vm.nr_hugepages=8200 # 2M a piece
 ########################################################################################
 # UEFI (OVMF)
@@ -125,17 +126,17 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   --smbios type=0,vendor="AMI",version="F21",date="10/01/2024" \
   --smbios type=1,manufacturer="Asus",product="STRIX",version="1.0",serial="12345678",uuid="40047947-413f-4188-93bc-c6a6e0747e9a",sku="B650EI",family="B650E MB" \
   --smp 16,sockets=1,cores=8,threads=2 \
-  --m 16384 \
-  --mem-prealloc \
-  --mem-path /dev/hugepages \
+  --object memory-backend-file,id=mem0,size=16G,mem-path=/dev/hugepages,prealloc=on,share=on \
+  --machine memory-backend=mem0 \
+  --m 16G \
   --nodefaults \
   --nographic \
   `#--vga virtio` \
   `#--vnc :0` \
   --rtc base=localtime,clock=host,driftfix=slew \
   --boot menu=on \
-  `#--drive file=/home/$LOGNAME/nfs/vm/en-us_windows_11_iot_enterprise_ltsc_2024_x64_dvd_f6b14814.iso,media=cdrom` \
-  `#--drive file=/home/$LOGNAME/nfs/vm/virtio-win-0.1.266.iso,media=cdrom` \
+  --drive file=/home/$LOGNAME/nfs/vm/en-us_windows_11_iot_enterprise_ltsc_2024_x64_dvd_f6b14814.iso,media=cdrom \
+  --drive file=/home/$LOGNAME/nfs/vm/virtio-win-0.1.271.iso,media=cdrom \
   --object iothread,id=io0 \
   --blockdev file,node-name=f0,filename=/home/$LOGNAME/vm/w11i.qcow2 \
   --blockdev qcow2,node-name=q0,file=f0 \
@@ -146,7 +147,7 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   --blockdev qcow2,node-name=q2,file=f1 \
   --device virtio-blk-pci,drive=q2,iothread=io0 \
   --device pcie-root-port,id=abcd,chassis=1 \
-  --device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on,romfile=/home/$LOGNAME/kvm/scripts/dummy.rom \
+  --device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
   --device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
   --device vfio-pci,host=03:00.2,bus=abcd,addr=00.2 \
   --device vfio-pci,host=03:00.3,bus=abcd,addr=00.3 \
@@ -172,7 +173,7 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
 
 ########################################################################################
 if [ "$pin_cpu" == "yes" ]; then
-    sleep 8
+    sleep 3
     bash /home/$LOGNAME/kvm/pin_thread.sh
 fi
 ########################################################################################
