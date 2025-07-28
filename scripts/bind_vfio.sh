@@ -10,8 +10,8 @@
 #!/bin/bash
 
 pci_devices=(
-    # "0000:03:00.0"  # GPU
-    # "0000:03:00.1"  # Audio
+    "0000:03:00.0"  # GPU
+    "0000:03:00.1"  # Audio
     "0000:03:00.2"  # USB
     "0000:03:00.3"  # Serial (i2c)
 )
@@ -47,7 +47,7 @@ bind_vfio() {
         sudo sh -c "echo '$dev' > /sys/bus/pci/devices/$dev/driver/unbind"
     done
 
-    unbind_consoles
+    # unbind_consoles
 
     for dev in "${pci_devices[@]}"; do
         echo "Binding vfio $dev (${vd_ids[$dev]})"
@@ -68,9 +68,9 @@ unbind_vfio() {
 
     for dev in "${pci_devices[@]}"; do
         echo "Releasing $dev"
-        sudo sh -c "echo '$dev' > /sys/bus/pci/devices/$dev/driver/unbind"
+        # sudo sh -c "echo '$dev' > /sys/bus/pci/devices/$dev/driver/unbind"
         # Remove devices from the PCI bus # Too strong, harder to attach
-        # sudo sh -c "echo 1 > /sys/bus/pci/devices/$dev/remove"
+        sudo sh -c "echo 1 > /sys/bus/pci/devices/$dev/remove"
     done
 
     # Rescan the PCI bus to rediscover devices
