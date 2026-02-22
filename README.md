@@ -91,6 +91,7 @@ sudo bash -c "echo 'vfio_iommu_type1' > /etc/modules-load.d/vfio_iommu_type1.con
 
 ################################################################
 # Windows BSOD "SYSTEM THREAD EXCEPTION NOT HANDLED"
+# !!! PUBG may quit after 2 hours of continuous running
 echo 1 > /sys/module/kvm/parameters/ignore_msrs
 # or permanently, use either one of the following 2 changes
     # kernel parameter

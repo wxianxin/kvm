@@ -3,7 +3,7 @@
 restore_cpu_freq="yes"
 release_hugepage="yes"
 restore_cpu_pinning="yes"
-rebind_gpu="no"
+reverse_rebind_gpu="yes"
 
 source /home/$LOGNAME/kvm/scripts/set_cpu_performance.sh
 source /home/$LOGNAME/kvm/scripts/bind_vfio.sh
@@ -24,7 +24,7 @@ if [ "$restore_cpu_pinning" == "yes" ]; then
     sudo systemctl set-property --runtime -- init.scope AllowedCPUs=0-31
 fi
 
-if [ "$reverse_rebind_GPU" == "yes" ]; then
-    echo "reverse_rebind_GPU: $reverse_rebind_GPU"
+if [ "$reverse_rebind_gpu" == "yes" ]; then
+    echo "reverse_rebind_GPU: $reverse_rebind_gpu"
     unbind_vfio
 fi

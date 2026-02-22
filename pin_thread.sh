@@ -24,9 +24,9 @@
 ########################################
 
 # pin all other system threads
-sudo systemctl set-property --runtime -- user.slice AllowedCPUs=10-15,26-31
-sudo systemctl set-property --runtime -- system.slice AllowedCPUs=10-15,26-31
-sudo systemctl set-property --runtime -- init.scope AllowedCPUs=10-15,26-31
+sudo systemctl set-property --runtime -- user.slice AllowedCPUs=21-31
+sudo systemctl set-property --runtime -- system.slice AllowedCPUs=21-31
+sudo systemctl set-property --runtime -- init.scope AllowedCPUs=21-31
 
 ########################################################################################
 # In qemu command window, get vcpu process id by executing `info cpus`
@@ -49,24 +49,24 @@ do
         echo $description;
         vcpu=$(echo $description | tr -dc '0-9');
         # cpu topology 1
-        # sudo taskset -cp $vcpu $pid;
+        sudo taskset -cp $vcpu $pid;
         # cpu topology 2
-        core_gap=16
-        pcpu=$(( vcpu / 2 + core_gap * (vcpu % 2) ))
-        echo $pcpu
-        sudo taskset -cp $pcpu $pid;
+        # core_gap=16
+        # pcpu=$(( vcpu / 2 + core_gap * (vcpu % 2) ))
+        # echo $pcpu
+        # sudo taskset -cp $pcpu $pid;
         continue;
     fi
 
     if [[ $description == *"io0"* ]]
     then
         echo $description;
-        sudo taskset -cp 8,24 $pid;
+        sudo taskset -cp 16,17 $pid;
         continue;
     fi
 
     echo $description;
-    sudo taskset -cp 9,25 $pid;
+    sudo taskset -cp 18,19 $pid;
 
     echo;
 done

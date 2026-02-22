@@ -37,8 +37,8 @@ set -x
 # toggles
 pin_cpu="yes"
 rebind_GPU="yes"
-network_bridge="no"
-set_cpu_performance="yes"
+network_bridge="yes"
+set_cpu_performance="no"
 
 ########################################################################################
 # Source VFIO functions
@@ -90,7 +90,7 @@ fi
 ########################################################################################
 echo 1 | sudo tee /proc/sys/vm/compact_memory   # defragment RAM
 sudo mount -t hugetlbfs nodev /dev/hugepages
-sudo sysctl vm.nr_hugepages=8200 # 2M a piece
+sudo sysctl vm.nr_hugepages=12300 # 2M a piece
 ########################################################################################
 # UEFI (OVMF)
 # export VGAPT_FIRMWARE_BIN=/usr/share/OVMF/OVMF_CODE.fd
@@ -110,7 +110,7 @@ sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
 # sudo chrt -r 1 taskset -c 4-15 /home/$LOGNAME/qemu-6.1.0/build/qemu-system-x86_64 \
 # sudo chrt -r 1 taskset -c 0-11 qemu-system-x86_64 \
 # here for CPU core count, use desired core count + IO + worker thread. eg. 6*2(guest) + 2(IO) + 2(worker) = 16
-sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="AllowedCPUs=0-9,16-25" \
+sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="AllowedCPUs=0-19" \
   `#--setenv=XDG_RUNTIME_DIR=/run/user/1000 `\
   --setenv=PIPEWIRE_RUNTIME_DIR=/run/user/1000 \
   `#--setenv=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus `\
@@ -126,9 +126,9 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   --smbios type=0,vendor="AMI",version="F21",date="10/01/2024" \
   --smbios type=1,manufacturer="Asus",product="STRIX",version="1.0",serial="12345678",uuid="40047947-413f-4188-93bc-c6a6e0747e9a",sku="B650EI",family="B650E MB" \
   --smp 16,sockets=1,cores=8,threads=2 \
-  --object memory-backend-file,id=mem0,size=16G,mem-path=/dev/hugepages,prealloc=on,share=on \
+  --object memory-backend-file,id=mem0,size=24G,mem-path=/dev/hugepages,prealloc=on,share=on \
   --machine memory-backend=mem0 \
-  --m 16G \
+  --m 24G \
   --nodefaults \
   --nographic \
   `#--vga virtio` \
@@ -138,10 +138,10 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   --drive file=/home/$LOGNAME/nfs/vm/en-us_windows_11_iot_enterprise_ltsc_2024_x64_dvd_f6b14814.iso,media=cdrom \
   --drive file=/home/$LOGNAME/nfs/vm/virtio-win-0.1.271.iso,media=cdrom \
   --object iothread,id=io0 \
-  --blockdev file,node-name=f0,filename=/home/$LOGNAME/vm/w11i.qcow2 \
-  --blockdev qcow2,node-name=q0,file=f0 \
+  --blockdev driver=file,node-name=f0,filename=/home/$LOGNAME/vm/w11i.qcow2,aio=io_uring,cache.direct=on,cache.no-flush=off \
+  --blockdev driver=qcow2,node-name=q0,file=f0,discard=unmap \
   --device virtio-blk-pci,drive=q0,iothread=io0 \
-  --blockdev host_device,node-name=q1,filename=/dev/nvme0n1p4 \
+  --blockdev driver=host_device,node-name=q1,filename=/dev/nvme0n1p4,aio=io_uring,cache.direct=on,cache.no-flush=off \
   --device virtio-blk-pci,drive=q1,iothread=io0 \
   --blockdev file,node-name=f1,filename=/home/$LOGNAME/vm/share.qcow2 \
   --blockdev qcow2,node-name=q2,file=f1 \
