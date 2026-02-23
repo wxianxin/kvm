@@ -91,6 +91,10 @@ fi
 echo 1 | sudo tee /proc/sys/vm/compact_memory   # defragment RAM
 sudo mount -t hugetlbfs nodev /dev/hugepages
 sudo sysctl vm.nr_hugepages=8200 # 2M a piece
+allocated=$(cat /proc/sys/vm/nr_hugepages)
+if [ "$allocated" -lt 8200 ]; then
+    echo "WARNING: $allocated of 8200 hugepages allocated."
+fi
 ########################################################################################
 # UEFI (OVMF)
 # export VGAPT_FIRMWARE_BIN=/usr/share/OVMF/OVMF_CODE.fd
@@ -155,7 +159,7 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   --device vfio-pci,host=03:00.2,bus=abcd,addr=00.2 \
   --device vfio-pci,host=03:00.3,bus=abcd,addr=00.3 \
   --audiodev pipewire,id=ad0 --device ich9-intel-hda --device hda-duplex,audiodev=ad0 \
-  --netdev user,id=usernet -device e1000e,netdev=usernet \
+  --netdev user,id=usernet --device e1000e,netdev=usernet \
   `#--device virtio-net-pci,netdev=net0 -netdev tap,id=net0,ifname=tap0,script=no,downscript=no` \
   --device ivshmem-plain,id=shmem0,memdev=looking-glass \
   --object memory-backend-file,id=looking-glass,mem-path=/dev/kvmfr0,size=256M,share=yes \

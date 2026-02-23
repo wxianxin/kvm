@@ -1,3 +1,4 @@
+#!/bin/bash
 # CPU pinning for QEMU vm
 
 # set -x
@@ -30,6 +31,11 @@ sudo systemctl set-property --runtime -- init.scope AllowedCPUs=22-31
 
 ########################################################################################
 # In qemu command window, get vcpu process id by executing `info cpus`
+
+if [ ! -f /run/steven_qemu.pid ]; then
+    echo "ERROR: PID file /run/steven_qemu.pid not found. Is QEMU running?"
+    exit 1
+fi
 
 qemu_pid=$(sudo cat /run/steven_qemu.pid)
 # ls -1 /proc/$qemu_pid/task   # see all child process

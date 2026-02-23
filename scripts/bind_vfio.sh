@@ -7,8 +7,6 @@
 # # Kill wayland display manager
 # sudo systemctl stop display-manager.service
 
-#!/bin/bash
-
 pci_devices=(
     "0000:03:00.0"  # GPU
     "0000:03:00.1"  # Audio
@@ -78,11 +76,14 @@ unbind_vfio() {
     echo "---- Steven ---- All devices unbound from vfio-pci ----"
 }
 
-case "$1" in
-    bind)   bind_vfio ;;
-    unbind) unbind_vfio ;;
-    *)      echo "Usage: $0 {bind|unbind}" ;;
-esac
+# Only run case when executed directly, not when sourced
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    case "$1" in
+        bind)   bind_vfio ;;
+        unbind) unbind_vfio ;;
+        *)      echo "Usage: $0 {bind|unbind}" ;;
+    esac
+fi
 
 
 # bind_vfio
