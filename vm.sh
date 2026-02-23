@@ -90,7 +90,7 @@ fi
 ########################################################################################
 echo 1 | sudo tee /proc/sys/vm/compact_memory   # defragment RAM
 sudo mount -t hugetlbfs nodev /dev/hugepages
-sudo sysctl vm.nr_hugepages=12300 # 2M a piece
+sudo sysctl vm.nr_hugepages=8200 # 2M a piece
 ########################################################################################
 # UEFI (OVMF)
 # export VGAPT_FIRMWARE_BIN=/usr/share/OVMF/OVMF_CODE.fd
@@ -109,8 +109,8 @@ sudo cp -f $VGAPT_FIRMWARE_VARS $VGAPT_FIRMWARE_VARS_TMP &&
 # sudo taskset 0xFFF0 qemu-system-x86_64 \
 # sudo chrt -r 1 taskset -c 4-15 /home/$LOGNAME/qemu-6.1.0/build/qemu-system-x86_64 \
 # sudo chrt -r 1 taskset -c 0-11 qemu-system-x86_64 \
-# here for CPU core count, use desired core count + IO + worker thread. eg. 6*2(guest) + 2(IO) + 2(worker) = 16
-sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="AllowedCPUs=0-19" \
+# here for CPU core count, use desired core count + IO + worker thread. eg. 8*2(guest) + 4(IO) + 2(worker) = 22
+sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="AllowedCPUs=0-21" \
   `#--setenv=XDG_RUNTIME_DIR=/run/user/1000 `\
   --setenv=PIPEWIRE_RUNTIME_DIR=/run/user/1000 \
   `#--setenv=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus `\
@@ -120,15 +120,16 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   --drive if=pflash,format=raw,readonly=on,file=$VGAPT_FIRMWARE_BIN \
   --drive if=pflash,format=raw,file=$VGAPT_FIRMWARE_VARS_TMP \
   --enable-kvm \
-  --machine q35,accel=kvm,mem-merge=off \
+  --machine q35,accel=kvm,mem-merge=off,kernel_irqchip=on \
   --cpu host,migratable=off,kvm=off,host-cache-info=on,-aes,-x2apic,+hypervisor,+topoext,+pdpe1gb,+tsc-deadline,+tsc_adjust,+arch-capabilities,+rdctl-no,+skip-l1dfl-vmentry,+mds-no,+pschange-mc-no,+invtsc,+xsaves,+perfctr_core,+clzero,+xsaveerptr,hv_relaxed,hv_vapic,hv_spinlocks=8191,hv_vpindex,hv_synic,hv_time,hv_stimer,hv_stimer_direct,hv_reset,hv_vendor_id=AuthenticAMD,hv_frequencies,hv_tlbflush,hv_ipi,hv_avic,-hv-reenlightenment,-hv-evmcs \
   `# tested benign flags --cpu +amd-stibp,+ibpb,+stibp,+virt-ssbd,+amd-ssbd,+cmp_legacy,`\
   --smbios type=0,vendor="AMI",version="F21",date="10/01/2024" \
   --smbios type=1,manufacturer="Asus",product="STRIX",version="1.0",serial="12345678",uuid="40047947-413f-4188-93bc-c6a6e0747e9a",sku="B650EI",family="B650E MB" \
   --smp 16,sockets=1,cores=8,threads=2 \
-  --object memory-backend-file,id=mem0,size=24G,mem-path=/dev/hugepages,prealloc=on,share=on \
+  --overcommit mem-lock=on \
+  --object memory-backend-file,id=mem0,size=16G,mem-path=/dev/hugepages,prealloc=on,prealloc-threads=8,share=on \
   --machine memory-backend=mem0 \
-  --m 24G \
+  --m 16G \
   --nodefaults \
   --nographic \
   `#--vga virtio` \
@@ -138,22 +139,24 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   --drive file=/home/$LOGNAME/nfs/vm/en-us_windows_11_iot_enterprise_ltsc_2024_x64_dvd_f6b14814.iso,media=cdrom \
   --drive file=/home/$LOGNAME/nfs/vm/virtio-win-0.1.271.iso,media=cdrom \
   --object iothread,id=io0 \
+  --object iothread,id=io1 \
+  --object iothread,id=io2 \
   --blockdev driver=file,node-name=f0,filename=/home/$LOGNAME/vm/w11i.qcow2,aio=io_uring,cache.direct=on,cache.no-flush=off \
   --blockdev driver=qcow2,node-name=q0,file=f0,discard=unmap \
   --device virtio-blk-pci,drive=q0,iothread=io0 \
   --blockdev driver=host_device,node-name=q1,filename=/dev/nvme0n1p4,aio=io_uring,cache.direct=on,cache.no-flush=off \
-  --device virtio-blk-pci,drive=q1,iothread=io0 \
-  --blockdev file,node-name=f1,filename=/home/$LOGNAME/vm/share.qcow2 \
-  --blockdev qcow2,node-name=q2,file=f1 \
-  --device virtio-blk-pci,drive=q2,iothread=io0 \
+  --device virtio-blk-pci,drive=q1,iothread=io1 \
+  --blockdev file,node-name=f1,filename=/home/$LOGNAME/vm/share.qcow2,aio=io_uring,cache.direct=on,cache.no-flush=off \
+  --blockdev qcow2,node-name=q2,file=f1,discard=unmap \
+  --device virtio-blk-pci,drive=q2,iothread=io2 \
   --device pcie-root-port,id=abcd,chassis=1 \
   --device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on \
   --device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
   --device vfio-pci,host=03:00.2,bus=abcd,addr=00.2 \
   --device vfio-pci,host=03:00.3,bus=abcd,addr=00.3 \
   --audiodev pipewire,id=ad0 --device ich9-intel-hda --device hda-duplex,audiodev=ad0 \
-  --netdev user,id=usernet -device e1000,netdev=usernet \
-  `#--device virtio-net,netdev=net0 -netdev tap,id=net0,ifname=tap0,script=no,downscript=no` \
+  --netdev user,id=usernet -device e1000e,netdev=usernet \
+  `#--device virtio-net-pci,netdev=net0 -netdev tap,id=net0,ifname=tap0,script=no,downscript=no` \
   --device ivshmem-plain,id=shmem0,memdev=looking-glass \
   --object memory-backend-file,id=looking-glass,mem-path=/dev/kvmfr0,size=256M,share=yes \
   --spice port=5900,addr=127.0.0.1,disable-ticketing \
