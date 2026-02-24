@@ -47,7 +47,7 @@ sudo vim /etc/default/grub
 # prevent the default driver to bind to the graphics card. # OR unbind driver before passthrough
 ########
 sudo vim /etc/default/grub
-    GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_iommu=on iommu=pt isolcpus=4-15 nohz_full=4-15 rcu_nocbs=4-15 module_blacklist=nouveau nouveau.modeset=0 vfio-pci.ids=10de:249d,10de:228b"
+    GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_iommu=on iommu=pt isolcpus=0-15 nohz_full=0-15 rcu_nocbs=0-15 module_blacklist=nouveau nouveau.modeset=0 vfio-pci.ids=10de:249d,10de:228b"
     GRUB_CMDLINE_LINUX_DEFAULT="quiet splash amd_iommu=on iommu=pt kvm.ignore_msrs=1 isolcpus=0-9,16-25 nohz_full=0-9,16-25 rcu_nocbs=0-9,16-25 vfio-pci.ids=1002:744c,1002:ab30,1002:7446,1002:7444"
 
 sudo grub-mkconfig -o /boot/grub/grub.cfg (or sudo update-grub; or sudo update-initramfs -u)
