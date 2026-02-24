@@ -16,7 +16,7 @@ set -x
 # iscsi dependency
 # pacman -S qemu-block-iscsi
 
-# qemu-img create -f qcow2 ~/vm/w10.qcow2 64G
+# qemu-img create -f qcow2 ~/vm/w11.qcow2 64G
 # qemu-img create -f qcow2 -o backing_file=/path/to/base/image.qcow2,backing_fmt=qcow2 /path/to/snapshot/image.qcow2
 # qemu-system-x86_64 -drive file=/path/to/snapshot/image.qcow2,if=virtio
 
@@ -47,20 +47,29 @@ source /home/$LOGNAME/kvm/scripts/set_cpu_performance.sh
 
 ########################################################################################
 # network bridge
-# a bridge is like a virtual switch
-# a tap device is like a virtual nic
-# virtio driver can leverage tap as nic for guest
-# NOTE: dhclient is requried.
+# a bridge (br0) acts as a virtual switch connecting the host NIC, the tap device, and any
+# other interfaces together at layer 2. The guest VM uses a tap device (tap0) as its virtual
+# NIC, which is attached to the bridge, giving the guest direct L2 access to the physical
+# network — effectively making it appear as another machine on the LAN.
+#
+# topology:  [physical network] <--> eno1 <--> br0 (virtual switch) <--> tap0 <--> [guest VM]
+#                                               ^
+#                                               | (host also communicates via br0)
+#
+# when eno1 is added to the bridge, it loses its own IP address. the bridge interface (br0)
+# takes over as the host's network endpoint, so br0 needs a DHCP lease to maintain host
+# connectivity.
 if [ "$network_bridge" == "yes" ]; then
     echo "network_bridge: $network_bridge"
-    sudo ip link add br0 type bridge
-    sudo ip link set dev br0 up
-    sudo ip link set dev enp0s31f6 master br0
-    sudo ip link set enp3s0 up
-    sudo ip tuntap add mode tap tap0
-    sudo ip link set tap0 master br0
+    sudo ip link add br0 type bridge          # create the bridge interface
+    sudo ip link set dev br0 up               # bring the bridge up
+    sudo ip link set dev eno1 master br0      # attach physical NIC to bridge (eno1 loses its IP)
+    sudo ip link set eno1 up
+    sudo ip tuntap add mode tap tap0          # create tap device for the guest VM
+    sudo ip link set tap0 master br0          # attach tap to bridge
     sudo ip link set tap0 up
-    sudo dhclient br0
+    sudo dhcpcd br0                         # get DHCP lease for the bridge (host connectivity)
+    # sudo dhclient br0                      #qqq alternative DHCP client (ubuntu)
 fi
 ########################################################################################
 # mount the storage. NOTE: this has to be after the network bridge setup.
@@ -140,8 +149,8 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   `#--vnc :0` \
   --rtc base=localtime,clock=host,driftfix=slew \
   --boot menu=on \
-  --drive file=/home/$LOGNAME/nfs/vm/en-us_windows_11_iot_enterprise_ltsc_2024_x64_dvd_f6b14814.iso,media=cdrom \
-  --drive file=/home/$LOGNAME/nfs/vm/virtio-win-0.1.271.iso,media=cdrom \
+  --drive file=/home/$LOGNAME/vm/Win11_25H2_EnglishInternational_x64.iso,media=cdrom \
+  --drive file=/home/$LOGNAME/vm/virtio-win-0.1.285.iso,media=cdrom \
   --object iothread,id=io0 \
   --object iothread,id=io1 \
   --object iothread,id=io2 \
@@ -158,9 +167,9 @@ sudo systemd-run --slice=steven_qemu.slice  --unit=steven_qemu --property="Allow
   --device vfio-pci,host=03:00.1,bus=abcd,addr=00.1 \
   --device vfio-pci,host=03:00.2,bus=abcd,addr=00.2 \
   --device vfio-pci,host=03:00.3,bus=abcd,addr=00.3 \
-  --audiodev pipewire,id=ad0 --device ich9-intel-hda --device hda-duplex,audiodev=ad0 \
-  --netdev user,id=usernet --device e1000e,netdev=usernet \
-  `#--device virtio-net-pci,netdev=net0 -netdev tap,id=net0,ifname=tap0,script=no,downscript=no` \
+  --audiodev pipewire,id=ad0 --device ich9-intel-hda --device hda-duplex,audiodev=ad0 `# HDA audio via PipeWire` \
+  `#--netdev user,id=usernet --device e1000e,netdev=usernet` `# SLIRP/user-mode NAT (no bridge needed)` \
+  --device virtio-net-pci,netdev=net0 -netdev tap,id=net0,ifname=tap0,script=no,downscript=no \
   --device ivshmem-plain,id=shmem0,memdev=looking-glass \
   --object memory-backend-file,id=looking-glass,mem-path=/dev/kvmfr0,size=256M,share=yes \
   --spice port=5900,addr=127.0.0.1,disable-ticketing \

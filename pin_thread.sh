@@ -45,8 +45,7 @@ do
     pid=$(basename $child);
     description=$(cat $child/comm);    # get the description name (for logic) 
 
-    if [ $qemu_pid == $pid ]
-    then
+    if [[ $qemu_pid == $pid ]]; then
         continue
     fi
 
