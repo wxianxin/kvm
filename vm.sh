@@ -33,6 +33,19 @@ set -x
 # # undo
 # sudo qemu-nbd --disconnect /dev/nbd0
 
+# BTRFS nocow
+# `aio=io_uring` is more performant than `aio=threads`, but less "boring", so try `aio=threads` first
+# mkdir -p ~/vm_nocow
+# sudo chattr +C ~/vm_nocow
+# sudo btrfs property set ~/vm_nocow compression none
+# lsattr -d ~/vm_nocow
+# qemu-img create -f qcow2 -o lazy_refcounts=on,preallocation=falloc ~/vm_nocow/w.qcow2 64G
+# qemu-img create -f qcow2 -o lazy_refcounts=on,preallocation=falloc ~/vm_nocow/d.qcow2 64G
+# qemu-img create -f qcow2 -o lazy_refcounts=on,preallocation=metadata ~/vm_nocow/share.qcow2 256G
+# qemu-img create -f raw -o preallocation=full ~/vm_nocow/d.raw 64G
+# qemu-img info ~/vm_nocow/d.raw
+
+
 ########################################################################################
 # toggles
 pin_cpu="yes"
@@ -126,7 +139,7 @@ QEMU_CMD=(
     sudo systemd-run
     --slice=steven_qemu.slice
     --unit=steven_qemu
-    --property="AllowedCPUs=0-21"
+    --property="AllowedCPUs=0-10,16-26"
     #--setenv=XDG_RUNTIME_DIR=/run/user/1000
     --setenv=PIPEWIRE_RUNTIME_DIR=/run/user/1000
     #--setenv=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
@@ -153,19 +166,26 @@ QEMU_CMD=(
     #--vnc :0
     --rtc base=localtime,clock=host,driftfix=slew
     --boot menu=on
-    --drive file=/home/$LOGNAME/vm/Win11_25H2_EnglishInternational_x64.iso,media=cdrom
-    --drive file=/home/$LOGNAME/vm/virtio-win-0.1.285.iso,media=cdrom
+#     --drive file=/home/$LOGNAME/nfs/vm/Win11_25H2_EnglishInternational_x64_v2.iso,media=cdrom
+#     --drive file=/home/$LOGNAME/nfs/vm/virtio-win-0.1.285.iso,media=cdrom
     --object iothread,id=io0
     --object iothread,id=io1
     --object iothread,id=io2
-    --blockdev driver=file,node-name=f0,filename=/home/$LOGNAME/vm/w11i.qcow2,aio=io_uring,cache.direct=on,cache.no-flush=off
+    --blockdev driver=file,node-name=f0,filename=/home/$LOGNAME/vm_nocow/w.qcow2,aio=io_uring,cache.direct=on,cache.no-flush=off
     --blockdev driver=qcow2,node-name=q0,file=f0,discard=unmap
     --device virtio-blk-pci,drive=q0,iothread=io0
-    --blockdev driver=host_device,node-name=q1,filename=/dev/nvme0n1p4,aio=io_uring,cache.direct=on,cache.no-flush=off
-    --device virtio-blk-pci,drive=q1,iothread=io1
-    --blockdev file,node-name=f1,filename=/home/$LOGNAME/vm/share.qcow2,aio=io_uring,cache.direct=on,cache.no-flush=off
-    --blockdev qcow2,node-name=q2,file=f1,discard=unmap
+
+#     --blockdev driver=host_device,node-name=q1,filename=/dev/nvme0n1p4,aio=io_uring,cache.direct=on,cache.no-flush=off
+#     --device virtio-blk-pci,drive=q1,iothread=io1
+
+    --blockdev driver=file,node-name=f_d,filename=/home/$LOGNAME/vm_nocow/d.qcow2,aio=io_uring,cache.direct=off,cache.no-flush=off
+    --blockdev driver=qcow2,node-name=q_d,file=f_d,discard=unmap
+    --device virtio-blk-pci,drive=q_d,iothread=io1
+
+    --blockdev file,node-name=f1,filename=/home/$LOGNAME/vm_nocow/share.qcow2,aio=io_uring,cache.direct=on,cache.no-flush=off
+    --blockdev driver=qcow2,node-name=q2,file=f1,discard=unmap
     --device virtio-blk-pci,drive=q2,iothread=io2
+
     --device pcie-root-port,id=abcd,chassis=1
     --device vfio-pci,host=03:00.0,bus=abcd,addr=00.0,multifunction=on
     --device vfio-pci,host=03:00.1,bus=abcd,addr=00.1
@@ -174,9 +194,9 @@ QEMU_CMD=(
     --audiodev pipewire,id=ad0
     --device ich9-intel-hda
     --device hda-duplex,audiodev=ad0
-    #--netdev user,id=usernet --device e1000e,netdev=usernet   # SLIRP/user-mode NAT (no bridge needed)
-    --device virtio-net-pci,netdev=net0
-    --netdev tap,id=net0,ifname=tap0,script=no,downscript=no
+    --netdev user,id=usernet --device e1000e,netdev=usernet   # SLIRP/user-mode NAT (no bridge needed)
+    # --device virtio-net-pci,netdev=net0
+    # --netdev tap,id=net0,ifname=tap0,script=no,downscript=no
     --device ivshmem-plain,id=shmem0,memdev=looking-glass
     --object memory-backend-file,id=looking-glass,mem-path=/dev/kvmfr0,size=256M,share=yes
     --spice port=5900,addr=127.0.0.1,disable-ticketing

@@ -53,13 +53,13 @@ do
     then
         echo $description;
         vcpu=$(echo $description | tr -dc '0-9');
-        # cpu topology 1
-        sudo taskset -cp $vcpu $pid;
+        # # cpu topology 1
+        # sudo taskset -cp $vcpu $pid;
         # cpu topology 2
-        # core_gap=16
-        # pcpu=$(( vcpu / 2 + core_gap * (vcpu % 2) ))
-        # echo $pcpu
-        # sudo taskset -cp $pcpu $pid;
+        core_gap=16
+        pcpu=$(( vcpu / 2 + core_gap * (vcpu % 2) ))
+        echo $pcpu
+        sudo taskset -cp $pcpu $pid;
         continue;
     fi
 
