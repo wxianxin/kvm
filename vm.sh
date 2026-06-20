@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/basho 
 
 set -x
 ########################################################################################
@@ -52,6 +52,7 @@ pin_cpu="yes"
 rebind_GPU="yes"
 network_bridge="no"
 set_cpu_performance="no"
+MEM_GB=20
 
 ########################################################################################
 # Source VFIO functions
@@ -106,16 +107,17 @@ fi
 # set CPU performance
 if [ "$set_cpu_performance" == "yes" ]; then
     echo "set_cpu_performance: $set_cpu_performance"
-    set_cpu_lp
+    set_cpu_maxp
 fi
 
 ########################################################################################
 echo 1 | sudo tee /proc/sys/vm/compact_memory   # defragment RAM
 sudo mount -t hugetlbfs nodev /dev/hugepages
-sudo sysctl vm.nr_hugepages=8200 # 2M a piece
+hugepages=$((MEM_GB * 512)) # 2M pages
+sudo sysctl vm.nr_hugepages="$hugepages"
 allocated=$(cat /proc/sys/vm/nr_hugepages)
-if [ "$allocated" -lt 8200 ]; then
-    echo "WARNING: $allocated of 8200 hugepages allocated."
+if [ "$allocated" -lt "$hugepages" ]; then
+    echo "WARNING: $allocated of $hugepages hugepages allocated."
 fi
 ########################################################################################
 # UEFI (OVMF)
@@ -157,9 +159,9 @@ QEMU_CMD=(
     --smbios type=1,manufacturer="Asus",product="STRIX",version="1.0",serial="12345678",uuid="40047947-413f-4188-93bc-c6a6e0747e9a",sku="B650EI",family="B650E MB"
     --smp 16,sockets=1,cores=8,threads=2
     --overcommit mem-lock=on
-    --object memory-backend-file,id=mem0,size=16G,mem-path=/dev/hugepages,prealloc=on,prealloc-threads=8,share=on
+    --object memory-backend-file,id=mem0,size=${MEM_GB}G,mem-path=/dev/hugepages,prealloc=on,prealloc-threads=8,share=on
     --machine memory-backend=mem0
-    --m 16G
+    --m ${MEM_GB}G
     --nodefaults
     --nographic
     #--vga virtio
