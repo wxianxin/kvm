@@ -52,7 +52,7 @@ pin_cpu="yes"
 rebind_GPU="yes"
 network_bridge="no"
 set_cpu_performance="no"
-MEM_GB=20
+MEM_GB=22
 
 ########################################################################################
 # Source VFIO functions
@@ -111,7 +111,10 @@ if [ "$set_cpu_performance" == "yes" ]; then
 fi
 
 ########################################################################################
+sync
+echo 3 | sudo tee /proc/sys/vm/drop_caches
 echo 1 | sudo tee /proc/sys/vm/compact_memory   # defragment RAM
+
 sudo mount -t hugetlbfs nodev /dev/hugepages
 hugepages=$((MEM_GB * 512)) # 2M pages
 sudo sysctl vm.nr_hugepages="$hugepages"
@@ -173,18 +176,18 @@ QEMU_CMD=(
     --object iothread,id=io0
     --object iothread,id=io1
     --object iothread,id=io2
-    --blockdev driver=file,node-name=f0,filename=/home/$LOGNAME/vm_nocow/w.qcow2,aio=io_uring,cache.direct=on,cache.no-flush=off
+    --blockdev driver=file,node-name=f0,filename=/home/$LOGNAME/vm_nocow/w.qcow2,aio=threads,cache.direct=on,cache.no-flush=off
     --blockdev driver=qcow2,node-name=q0,file=f0,discard=unmap
     --device virtio-blk-pci,drive=q0,iothread=io0
 
 #     --blockdev driver=host_device,node-name=q1,filename=/dev/nvme0n1p4,aio=io_uring,cache.direct=on,cache.no-flush=off
 #     --device virtio-blk-pci,drive=q1,iothread=io1
 
-    --blockdev driver=file,node-name=f_d,filename=/home/$LOGNAME/vm_nocow/d.qcow2,aio=io_uring,cache.direct=off,cache.no-flush=off
+    --blockdev driver=file,node-name=f_d,filename=/home/$LOGNAME/vm_nocow/d.qcow2,aio=threads,cache.direct=off,cache.no-flush=off
     --blockdev driver=qcow2,node-name=q_d,file=f_d,discard=unmap
     --device virtio-blk-pci,drive=q_d,iothread=io1
 
-    --blockdev file,node-name=f1,filename=/home/$LOGNAME/vm_nocow/share.qcow2,aio=io_uring,cache.direct=on,cache.no-flush=off
+    --blockdev file,node-name=f1,filename=/home/$LOGNAME/vm_nocow/share.qcow2,aio=threads,cache.direct=on,cache.no-flush=off
     --blockdev driver=qcow2,node-name=q2,file=f1,discard=unmap
     --device virtio-blk-pci,drive=q2,iothread=io2
 
