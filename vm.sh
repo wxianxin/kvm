@@ -52,7 +52,7 @@ pin_cpu="yes"
 rebind_GPU="yes"
 network_bridge="no"
 set_cpu_performance="no"
-MEM_GB=22
+MEM_GB=21
 
 ########################################################################################
 # Source VFIO functions
@@ -187,7 +187,7 @@ QEMU_CMD=(
     --blockdev driver=qcow2,node-name=q_d,file=f_d,discard=unmap
     --device virtio-blk-pci,drive=q_d,iothread=io1
 
-    --blockdev file,node-name=f1,filename=/home/$LOGNAME/vm_nocow/share.qcow2,aio=threads,cache.direct=on,cache.no-flush=off
+    --blockdev file,node-name=f1,filename=/$HOME/nfs/vm_nocow/share.qcow2,aio=threads,cache.direct=on,cache.no-flush=off
     --blockdev driver=qcow2,node-name=q2,file=f1,discard=unmap
     --device virtio-blk-pci,drive=q2,iothread=io2
 
